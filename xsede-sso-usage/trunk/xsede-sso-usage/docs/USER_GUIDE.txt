@@ -1,0 +1,35 @@
+INTRODUCTION
+
+This document describes usage information for the xsede-sso-usage package.
+
+DESCRIPTION
+
+The scripts/tools provided in this package allow the admin to analyze
+usage information for the SSO Hub in the following ways:
+
+- Number of logins to the SSO Hub during this period
+- Number of unique users who logged in to the SSO Hub during this period
+- Maximum number of simultaneous SSO Hub sessions during this period (to understand load)
+- Number of users who logged in to each SP system via the SSO Hub during this period
+
+The above information can be retrieved by running the below respective scripts.
+
+/usr/local/sbin/sso-num-logins [-i <input-file>] [-f <filtered-data-output-file>] <from-mm-dd-yyyy> <to-mm-dd-yyyy>
+/usr/local/sbin/sso-num-unique-users [-i <input-file>] [-f <filtered-data-output-file>] <from-mm-dd-yyyy> <to-mm-dd-yyyy>
+/usr/local/sbin/sso-max-sim-logins [-i <input-file>] [-f <filtered-data-output-file>] <from-mm-dd-yyyy> <to-mm-dd-yyyy>
+sudo /usr/local/sbin/sso-gsissh-logins [-d <auditd-data-dir>] [-f <filtered-data-output-file>] <from-mm-dd-yyyy> <to-mm-dd-yyyy>
+
+
+The scripts will process the relevant files (wtmp, audit, etc.) and generate the corresponding information mentioned above.
+
+The -i option can be used to specify a file in "last -F" command output format. If this option isn't specified, the script will run the "last -F" command and process the output.
+
+The optional -d option can be used to specify a directory that contains raw auditd log files. The default auditd log directory will be /var/log/audit/ for the last script. Files named “audit*” will be processed by the last script.
+
+If a filename is provided with the optional -f option, filtered raw data pertaining to the specified date range will be written to that file. The filtered raw data will be in the format of the output of “last -F” command in the case of the first 3 scripts and in the auditd log format for the last script. The -f option is being provided to enable a cron job to be setup to run periodically to collect filtered raw data and transfer to a central repository (xci-metrics.xsede.org) being designed and developed as part of XCI-187. Filtered auditd logs and 'last -f' output should be generated on a daily basis and sent to the central repository being designed as part of XCI-187. XCI-187 will specify the mode of collection of this filtered raw data.
+
+The above scripts can be installed and run on the central repository (xci-metrics.xsede.org) as well.
+
+DEFECT AND ISSUE REPORTING
+
+Please report any defects and issues to help@xsede.org
