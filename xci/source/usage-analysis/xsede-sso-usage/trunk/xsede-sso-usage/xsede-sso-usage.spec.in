@@ -1,0 +1,53 @@
+Name:           xsede-sso-usage
+Version:        %VER%
+Release:        %REL%
+Summary:        SSO Hub usage analysis
+
+Group:          Performance Tools
+#Copyright:      TBD
+License:        ASL 2.0
+URL:            http://www.xsede.org
+Source0:        xsede-sso-usage-%{version}.tar.gz
+Source1:        USER_GUIDE.txt
+
+BuildArch:      noarch
+
+#BuildRequires:
+Requires:       python >= 2.6.6
+Requires:       audit >= 2.6.5
+
+Prefix: /usr/local/sbin
+
+%description
+SSO Hub usage analysis scripts.
+
+
+%prep
+%setup -q
+cp -p %SOURCE1 .
+
+
+%build
+
+
+%install
+rm -rf $RPM_BUILD_ROOT
+mkdir -p $RPM_BUILD_ROOT/usr/local/sbin/
+cp -P sso-* $RPM_BUILD_ROOT/usr/local/sbin/
+mkdir -p $RPM_BUILD_ROOT/etc/audit/rules.d/
+cp -P gsissh.rules $RPM_BUILD_ROOT/etc/audit/rules.d/
+
+
+%clean
+#rm -rf $RPM_BUILD_ROOT
+
+
+%files
+%defattr(-, root, root)
+%doc USER_GUIDE.txt
+%attr(555, root, root) /usr/local/sbin/*
+%attr(600, root, root) %config(noreplace) /etc/audit/rules.d/*
+
+%changelog
+* Wed Dec 01 2017 Venkat Yekkirala <vyekkira@illinois.edu> 1.0-0
+- Initial RPM release
