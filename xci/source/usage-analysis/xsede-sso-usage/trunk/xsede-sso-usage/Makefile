@@ -16,7 +16,8 @@ rpm: tarball
 	echo $(RPMBUILD_TOPDIR)
 	mkdir -p $(RPMBUILD_TOPDIR)/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
 	mv $(SOURCE_NAME).tar.gz $(RPMBUILD_TOPDIR)/SOURCES/
-	cp -p docs/USER_GUIDE.txt $(RPMBUILD_TOPDIR)/SOURCES/
+	cp docs/USER_GUIDE.txt $(RPMBUILD_TOPDIR)/SOURCES/
+	chmod 444 $(RPMBUILD_TOPDIR)/SOURCES/USER_GUIDE.txt
 	sed -e "s/%VER%/$(VER)/g" -e "s/%REL%/$(REL)/g" \
 		xsede-sso-usage.spec.in \
 		>$(RPMBUILD_TOPDIR)/SPECS/xsede-sso-usage.spec
@@ -34,6 +35,7 @@ tarball: clean
 	tar cvzf $(SOURCE_NAME).tar.gz $(SOURCE_NAME) $(BUNDLE_NAME)
 
 clean:
-	rm -fr $(BUNDLE_NAME).tar.gz $(BUNDLE_NAME).tar.gz.sig
+	rm -fr $(SOURCE_NAME)
+	rm -fr $(BUNDLE_NAME).tar.gz
 	rm -fr $(BUNDLE_NAME)
 	rm -fr $(RPMBUILD_TOPDIR)

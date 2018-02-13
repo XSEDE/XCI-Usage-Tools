@@ -1,6 +1,6 @@
 0. This document explains how to:
 
-   A) Make XSEDE SSO Usage distribution files (RPMS, SRPMS, source, JKS)
+   A) Make XSEDE SSO Usage distribution files (RPMS, SRPMS, source)
       Prerequisites:
         rpmbuild
 
@@ -25,7 +25,7 @@ To set SHA2 digest preference set these options in your ~/.gnupg/gpg.conf:
 ZLIB BZIP2 ZIP Uncompressed
 
 ###############################################################################
-# Making XSEDE SSO Usage distribution files (RPMS, SRPMS, source, JKS)
+# Making XSEDE SSO Usage distribution files (RPMS, SRPMS, source)
 ###############################################################################
 
 1. Increment the contents of the VERSION file, for example from 1.0 to 1.1.
@@ -54,18 +54,7 @@ ZLIB BZIP2 ZIP Uncompressed
    (NOTE: substitute version and release in the below command).
    $ sudo rpm -e <xsede-sso-usage-version-release>
 
-8. Also check the contents of xsede-sso-usage-<VERSION>-<RELEASE>.tar.gz
-
 ###############################################################################
 # Sign and upload distribution files to XSEDE distribution locations
 # Using the instructions in the README-yum.txt file
 ###############################################################################
-
-TIPS:
-
-1. To compute the sha1fp.0 value in the "info" files, use the below command:
-
-$ openssl x509 -sha1 -noout -fingerprint < cert.pem
-
-2. To compute the sha1sum of the tar ball and the JKS files, use the sha1sum
-   command.

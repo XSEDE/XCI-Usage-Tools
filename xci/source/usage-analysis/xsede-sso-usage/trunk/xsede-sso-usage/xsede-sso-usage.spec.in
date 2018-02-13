@@ -43,9 +43,10 @@ cp -P gsissh.rules $RPM_BUILD_ROOT/etc/audit/rules.d/
 
 
 %files
-%defattr(-, root, root)
+%defattr(-,root,root)
 %doc USER_GUIDE.txt
 %attr(555, root, root) /usr/local/sbin/*
+%attr(550, root, root) /usr/local/sbin/sso-gsissh-logins
 %attr(600, root, root) %config(noreplace) /etc/audit/rules.d/*
 
 %changelog
