@@ -1,7 +1,11 @@
 How to install and configure ipf-usage
 
-# Download the packages
+# Setup install directory owned by a user who can access the files that need to be uploaded
   $ mkdir /soft/ipf-usage
+  $ chown owner.group /soft/ipf-usage
+
+# Execute remaining setps as a user who can access the files that need to be uploaded
+# Download the packages
   $ cd /soft/ipf-usage
   $ svn co https://software.xsede.org/svn/xci/source/usage-analysis/ipf-usage/trunk/ ./
 
