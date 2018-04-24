@@ -1,0 +1,23 @@
+How to install and configure ipf-usage
+
+# Download the packages
+  $ mkdir /soft/ipf-usage
+  $ cd /soft/ipf-usage
+  $ svn co https://software.xsede.org/svn/xci/source/usage-analysis/ipf-usage/trunk/ ./
+
+# Generate SSH keys without a passphrase
+# Send the public key in id_rsa.pub to the Usage Collection Service administrators
+  $ ssh-keygen -t rsa -f /soft/ipf-usage/conf/id_rsa
+
+# Review and update configuration files etc/*.conf 
+
+# Generate a custom Python venv
+# Review, update, and execute bin/python-venv-init.sh
+  $ ./bin/python-venv-1.0.sh
+
+# Setup upload cron
+# Review and update bin/upload_rabbitmq.sh
+# Test by hand
+  $ /soft/ipf-usage/bin/upload_rabbimq.sh
+# Install crontab:
+  0 6 * * 1 /soft/ipf-usage/bin/upload_rabbitmq.sh
