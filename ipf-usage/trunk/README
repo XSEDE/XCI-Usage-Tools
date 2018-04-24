@@ -1,23 +1,30 @@
-How to install and configure ipf-usage
+###############################################################################
+# How to install and configure ipf-usage
+###############################################################################
 
-# Setup install directory owned by a user who can access the files that need to be uploaded
+# Pre-requisites
+  1. Python with virtualenv
+
+# Create install directory owned by the account that will upload files
   $ mkdir /soft/ipf-usage
-  $ chown owner.group /soft/ipf-usage
+  $ chown <owner>.<group> /soft/ipf-usage
 
-# Execute remaining setps as a user who can access the files that need to be uploaded
-# Download the packages
+# Perform the rest of this procedure from the account that will upload files
+
+# Install the package(s), create log directory
   $ cd /soft/ipf-usage
   $ svn co https://software.xsede.org/svn/xci/source/usage-analysis/ipf-usage/trunk/ ./
+  $ mkdir var
 
 # Generate SSH keys without a passphrase
-# Send the public key in id_rsa.pub to the Usage Collection Service administrators
   $ ssh-keygen -t rsa -f /soft/ipf-usage/conf/id_rsa
+# Send the id_rsa.pub public key to the Usage Collection Service administrators
 
 # Review and update configuration files etc/*.conf 
 
-# Generate a custom Python venv
+# Generate a custom Python venv with some required packages
 # Review, update, and execute bin/python-venv-init.sh
-  $ ./bin/python-venv-1.0.sh
+  $ ./bin/python-venv-init.sh
 
 # Setup upload cron
 # Review and update bin/upload_rabbitmq.sh
