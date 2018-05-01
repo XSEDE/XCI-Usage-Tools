@@ -82,18 +82,17 @@ class Analyze():
         if not client:
             self.skip += 1
             return
-        user = row.get('USE_USER', None)
-        if not user:
-            self.skip += 1
-            return
-
+ 
         MON_USAGE = self.USAGE[MON_STR]
         MON_USAGE['TIMESUSED'] += 1
         MON_USAGE['CLIENTS'][client] = MON_USAGE['CLIENTS'].get(client, 0) + 1
-        MON_USAGE['USERS'][user] = MON_USAGE['USERS'].get(user, 0) + 1
+
+        user = row.get('USE_USER', None)
+        if user:
+            MON_USAGE['USERS'][user] = MON_USAGE['USERS'].get(user, 0) + 1
     
     def dump_usage(self):
-        for mon in self.USAGE:
+        for mon in sorted(self.USAGE):
             MON_USAGE = self.USAGE[mon]
             print('For month={}'.format(mon))
             print('   Times used={}'.format(MON_USAGE['TIMESUSED']))
