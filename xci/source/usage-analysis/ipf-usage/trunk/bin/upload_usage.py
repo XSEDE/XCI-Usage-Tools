@@ -1,4 +1,4 @@
-#!/soft/python-usage-1/bin/python
+#!/soft/ipf-usage/python/bin/python
 
 from __future__ import print_function
 import argparse

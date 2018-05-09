@@ -1,4 +1,4 @@
-#!/soft/python-usage-1/bin/python
+#!/soft/ipf-usage/python/bin/python
 ###############################################################################
 # Parse a RabbitMQ log and return standard usage in CSV
 # Usage:  ./<script> [<input_file>]
