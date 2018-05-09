@@ -13,5 +13,5 @@ CMD="source ${VENV_BASE}/bin/activate"
 echo Executing: ${CMD}
 ${CMD}
 
-pip install paramiko
-pip install pytz
+pip --no-cache-dir install paramiko
+pip --no-cache-dir install pytz
