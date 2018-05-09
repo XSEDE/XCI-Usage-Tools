@@ -1,4 +1,4 @@
-#!/soft/ipf-usage/python-venv-1.0/bin/python
+#!/soft/python-usage-1/bin/python
 
 from __future__ import print_function
 import argparse
