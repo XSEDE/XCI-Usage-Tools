@@ -1,6 +1,7 @@
 ###############################################################################
-# How to install and configure ipf-usage
-# What happens when ipf-usage runs
+# ipf-usage installation instructions
+# 
+# ipf-usage execution:
 #    1. cron or interactive execution of upload_rabbitmq.sh
 #    2. upload_rabbitmq.sh executes
 #       upload_usage.py with a custom configuration file
@@ -12,38 +13,45 @@
 #       e. tracks previously uploaded files in a status file to not reprocess them
 ###############################################################################
 
-# Pre-requisites
-  1. Python with virtualenv
+Pre-requisites:
+  - Python with Virtualenv
 
-# Create the install directory owned by the account that will upload files
+1) As root create the install directory owned by the account that will upload usage
   $ mkdir /soft/ipf-usage
   $ chown <owner>.<group> /soft/ipf-usage
 
-# Create the python virtualenv directory owned by the account that will upload files
-  $ mkdir /soft/python-usage-1
-  $ chown <owner>.<group> /soft/python-usage-1
+For the remaining steps, switch to the account that will upload files
 
-# For the remaining steps, switch to the account that will upload files
-
-# Install the package(s)
-  $ cd /soft/ipf-usage
+2) Install package(s)
+  $ mkdir /soft/ipf-usage/PROD
+  $ cd    /soft/ipf-usage/PROD
   $ svn co https://software.xsede.org/svn/xci/source/usage-analysis/ipf-usage/trunk/ ./
-# Create log directory
+
+3) Configure package(s)
+  # Create local directories
+  $ mkdir /soft/ipf-usage/conf
   $ mkdir /soft/ipf-usage/var
 
-# Generate SSH keys without a passphrase
+  # Generate SSH keys without a passphrase
   $ ssh-keygen -t rsa -f /soft/ipf-usage/conf/id_rsa
-# Send the id_rsa.pub public key to the Usage Collection Service administrators
+  # Send the id_rsa.pub public key to the Usage Collection Service administrators
 
-# Review and update configuration files etc/*.conf 
+  # Create the configuration files
+  $ cp /soft/ipf-usage/PROD/conf/upload_rabbitmq.conf.example \
+       /soft/ipf-usage/conf/upload_rabbitmq.conf
 
-# Generate a custom Python venv with some required packages
-# Review, update, and execute bin/python-venv-init.sh
-  $ ./bin/python-venv-init.sh
+  # Edit upload_rabbitmq.conf to configure
 
-# Review and update bin/upload_rabbitmq.sh
-# Test by hand
-  $ /soft/ipf-usage/bin/upload_rabbimq.sh
-# Check logs in var/ and status in conf/
-# Install upload cron
-  0 6 * * 1 /soft/ipf-usage/bin/upload_rabbitmq.sh
+  # Set PYTHON_BASE as appropriate
+  vi PROD/bin/python-venv-init.sh
+  vi PROD/bin/upload_rabbitmq.sh
+
+4) Generate a custom Python venv with some required packages
+  $ /soft/ipf-usage/PROD/bin/python-venv-init.sh
+
+5) Test and run in production
+  # Test by hand
+  $ /soft/ipf-usage/PROD/bin/upload_rabbimq.sh
+  # Check logs in var/ and status in conf/
+  # Install in cron
+  0 6 * * 1 /soft/ipf-usage/PROD/bin/upload_rabbitmq.sh
