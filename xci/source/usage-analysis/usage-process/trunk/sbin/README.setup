@@ -1,6 +1,6 @@
-# created /soft/incoming-admin/skel with  .ssh/
-semanage fcontext -a -t ssh_home_t "/soft/incoming-admin/skel/.ssh(/.*)"
-restorecon -Rv "/soft/incoming-admin/skel/.ssh/"
+# created /soft/usage-process/skel with  .ssh/
+semanage fcontext -a -t ssh_home_t "/soft/usage-process/skel/.ssh(/.*)"
+restorecon -Rv "/soft/usage-process/skel/.ssh/"
 
 mkdir /incoming
 semanage fcontext -at root_t /incoming
@@ -11,9 +11,9 @@ restorecon -Rv /incoming
 Executed
 
 # Separated info* so they don't share ssh keys and can't affect each others files if one is compromised
-/soft/incoming-admin/setup_incoming_account.sh -l info1  -d "info1.dyn.xsede.org upload account"  -k
-/soft/incoming-admin/setup_incoming_account.sh -l info2  -d "info2.dyn.xsede.org upload account"  -k
-/soft/incoming-admin/setup_incoming_account.sh -l info3  -d "info3.dyn.xsede.org upload account"  -k
-/soft/incoming-admin/setup_incoming_account.sh -l info4  -d "info4.dyn.xsede.org upload account"  -k
-/soft/incoming-admin/setup_incoming_account.sh -l ssohub -d "login.xsede.org upload account" -k
-/soft/incoming-admin/setup_incoming_account.sh -l csr -d "software.xsede.org upload account" -k
+/soft/usage-process/sbin/setup_incoming_account.sh -l info1  -d "info1.dyn.xsede.org upload account"  -k
+/soft/usage-process/sbin/setup_incoming_account.sh -l info2  -d "info2.dyn.xsede.org upload account"  -k
+/soft/usage-process/sbin/setup_incoming_account.sh -l info3  -d "info3.dyn.xsede.org upload account"  -k
+/soft/usage-process/sbin/setup_incoming_account.sh -l info4  -d "info4.dyn.xsede.org upload account"  -k
+/soft/usage-process/sbin/setup_incoming_account.sh -l ssohub -d "login.xsede.org upload account" -k
+/soft/usage-process/sbin/setup_incoming_account.sh -l csr -d "software.xsede.org upload account" -k
