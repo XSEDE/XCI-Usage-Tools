@@ -4,7 +4,7 @@
  "TEST_LOCAL_GLOB": "rabbit@info?.log-201803[0-9][0-9]*",
  "UPLOAD_STATUS_FILE": "/soft/ipf-usage/conf/upload_rabbitmq_status.json",
  "RSA_KEY": "/soft/ipf-usage/conf/id_rsa",
- "LOG_PARSER": "/soft/ipf-usage/bin/rabbitmq_parser.py",
+ "LOG_PARSER": "/soft/ipf-usage/PROD/bin/rabbitmq_parser.py",
  "REMOTE_HOSTNAME": "xci-metrics.xsede.org",
  "REMOTE_PORT": 22,
  "REMOTE_USERNAME": "info?",
