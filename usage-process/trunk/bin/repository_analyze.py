@@ -1,4 +1,4 @@
-#!/soft/metrics-tools/venv-1.0/bin/python
+#!/soft/usage-process-python/bin/python
 
 from __future__ import print_function
 import argparse
@@ -6,6 +6,8 @@ import csv
 import fnmatch
 import gzip
 import json
+import logging
+import logging.handlers
 import os
 import re
 import socket
@@ -24,6 +26,8 @@ class Analyze():
                             help='Directory path where files are located')
         parser.add_argument('-g', '--glob', action='store', \
                             help='File selection glob in directory path')
+        parser.add_argument('-l', '--log', action='store', \
+                            help='Logging level (default=warning)')
         parser.add_argument('--verbose', action='store_true', \
                             help='Verbose output')
         parser.add_argument('--pdb', action='store_true', \
@@ -41,32 +45,52 @@ class Analyze():
             eprint('ERROR "{}" parsing config={}'.format(e, config_path))
             sys.exit(1)
 
+        # Initialize logging from arguments, or config file, or default to WARNING as last resort
+        numeric_log = None
+        if self.args.log is not None:
+            numeric_log = getattr(logging, self.args.log.upper(), None)
+        if numeric_log is None and 'LOG_LEVEL' in self.config:
+            numeric_log = getattr(logging, self.config['LOG_LEVEL'].upper(), None)
+        if numeric_log is None:
+            numeric_log = getattr(logging, 'WARNING', None)
+        if not isinstance(numeric_log, int):
+            raise ValueError('Invalid log level: {}'.format(numeric_log))
+        self.logger = logging.getLogger('DaemonLog')
+        self.logger.setLevel(numeric_log)
+        self.formatter = logging.Formatter(fmt='%(asctime)s.%(msecs)03d %(levelname)s %(message)s', \
+                                           datefmt='%Y/%m/%d %H:%M:%S')
+        self.handler = logging.handlers.TimedRotatingFileHandler(self.config['LOG_FILE'], when='W6', \
+                                                                 backupCount=999, utc=True)
+        self.handler.setFormatter(self.formatter)
+        self.logger.addHandler(self.handler)
+
         for c in ['user_filter_file', 'client_filter_file']:
             if not self.config.get(c, None):
-                eprint('Missing config "{}"'.format(c))
+                self.logger.error('Missing config "{}"'.format(c))
                 sys.exit(1)
 
         self.USER_FILTER_FILE = self.config['user_filter_file']
         try:
             with open(self.USER_FILTER_FILE) as fh:
                self.USER_MAP = json.load(fh)
+            self.logger.info('Loaded {}/USER_MAP entries'.format(len(self.USER_MAP)))
         except Exception as e:
-            eprint('ERROR loading map={}, initializing'.format(self.USER_FILTER_FILE))
+            self.logger.error('ERROR loading map={}, initializing'.format(self.USER_FILTER_FILE))
             self.USER_MAP = {}
 
         self.CLIENT_FILTER_FILE = self.config['client_filter_file']
         try:
             with open(self.CLIENT_FILTER_FILE) as fh:
                self.CLIENT_MAP = json.load(fh)
+            self.logger.info('Loaded {}/CLIENT_MAP entries'.format(len(self.CLIENT_MAP)))
         except Exception as e:
-            eprint('ERROR loading map={}, initializing'.format(self.CLIENT_FILTER_FILE))
+            self.logger.warning('ERROR loading map={}, initializing'.format(self.CLIENT_FILTER_FILE))
             self.CLIENT_MAP = {}
-        eprint('Loaded {}/USER_MAP {}/CLIENT_MAP entries'.format(len(self.USER_MAP), len(self.CLIENT_MAP)))
 
         self.IPRE = re.compile('^\d+.\d+.\d+.\d+$')
         self.PATH = self.args.path
         self.GLOB = self.args.glob
-        eprint('Starting {}: path={} glob={}'.format(sys.argv[0], self.PATH, self.GLOB))
+        self.logger.info('Starting {}: path={} glob={}'.format(sys.argv[0], self.PATH, self.GLOB))
 
         self.FILES = [f for f in fnmatch.filter(os.listdir(self.PATH), self.GLOB) if os.path.isfile(os.path.join(self.PATH, f))]
 
@@ -155,19 +179,19 @@ class Analyze():
 
     def finish(self):
         rc = 0
-        eprint('Writing {}/USER_MAP {}/CLIENT_MAP entries'.format(len(self.USER_MAP), len(self.CLIENT_MAP)))
+        self.logger.info('Writing {}/USER_MAP {}/CLIENT_MAP entries'.format(len(self.USER_MAP), len(self.CLIENT_MAP)))
         try:
             with open(self.USER_FILTER_FILE, 'w+') as file:
                 json.dump(self.USER_MAP, file, indent=4, sort_keys=True)
         except IOError:
-            eprint('Failed to write config=' + self.USER_FILTER_FILE)
+            self.logger.error('Failed to write config=' + self.USER_FILTER_FILE)
             rc = 1
 
         try:
             with open(self.CLIENT_FILTER_FILE, 'w+') as file:
                 json.dump(self.CLIENT_MAP, file, indent=4, sort_keys=True)
         except IOError:
-            eprint('Failed to write config=' + self.CLIENT_FILTER_FILE)
+            self.logger.error('Failed to write config=' + self.CLIENT_FILTER_FILE)
             rc = 1
         return(rc)
 

@@ -1,14 +1,17 @@
 #!/usr/bin/env python
 ###############################################################################
-# :wq
+# 
 ###############################################################################
 
+from __future__ import print_function
 import argparse
 import binascii
 import datetime
 from datetime import datetime, tzinfo, timedelta
 import grp
 import json
+import logging
+import logging.handlers
 import os
 import pwd
 import shutil
@@ -26,6 +29,9 @@ class UTC(tzinfo):
     def dst(self, dt):
         return timedelta(0)
 utc = UTC()
+
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
 
 def is_gz_file(filepath):
     with open(filepath, 'rb') as test_f:
@@ -73,8 +79,27 @@ class ProcessMoves():
             with open(config_path, 'r') as f:
                 self.config = json.load(f)
         except ValueError, e:
-            print 'ERROR: "{}" parsing config={}'.format(e, config_path)
+            eprint('ERROR: "{}" parsing config={}'.format(e, config_path))
             sys.exit(1)
+
+        # Initialize logging from arguments, or config file, or default to WARNING as last resort
+        numeric_log = None
+        if self.args.log is not None:
+            numeric_log = getattr(logging, self.args.log.upper(), None)
+        if numeric_log is None and 'LOG_LEVEL' in self.config:
+            numeric_log = getattr(logging, self.config['LOG_LEVEL'].upper(), None)
+        if numeric_log is None:
+            numeric_log = getattr(logging, 'WARNING', None)
+        if not isinstance(numeric_log, int):
+            raise ValueError('Invalid log level: {}'.format(numeric_log))
+        self.logger = logging.getLogger('DaemonLog')
+        self.logger.setLevel(numeric_log)
+        self.formatter = logging.Formatter(fmt='%(asctime)s.%(msecs)03d %(levelname)s %(message)s', \
+                                           datefmt='%Y/%m/%d %H:%M:%S')
+        self.handler = logging.handlers.TimedRotatingFileHandler(self.config['LOG_FILE'], when='W6', \
+                                                                 backupCount=999, utc=True)
+        self.handler.setFormatter(self.formatter)
+        self.logger.addHandler(self.handler)
 
         self.owner = self.config.get('owner', None)
         if self.owner:
@@ -93,26 +118,32 @@ class ProcessMoves():
         start_ts = datetime.now(utc)
         start_moves = self.stats['moves']
         source_path = moveitem.get('source', '')
+        if not os.access(source_path, os.R_OK):
+            self.logger.error('Move source is not readable: ' + source_path)
+            return
         if not os.path.isdir(source_path):
-            print('ERROR: move source is not a directory: ' + source_path)
+            self.logger.error('Move source is not a directory: ' + source_path)
             return
         dest_path = moveitem.get('destination', '')
-        if not os.path.isdir(dest_path):
-            print('ERROR: move destination is not a directory: ' + dest_path)
+        if not os.access(dest_path, os.W_OK):
+            self.logger.error('Move destination is not writable: ' + dest_path)
             return
-        print('Start moving from={} to={}'.format(source_path, dest_path))
+        if not os.path.isdir(dest_path):
+            self.logger.error('Move destination is not a directory: ' + dest_path)
+            return
+        self.logger.info('Start moving from={} to={}'.format(source_path, dest_path))
 
      	move_filenames = [f for f in os.listdir(source_path) if os.path.isfile(os.path.join(source_path, f))]
         for filename in move_filenames:
             rc = self.move_one_file(os.path.join(source_path, filename), os.path.join(dest_path, filename))
         end_ts = datetime.now(utc)
         end_moves = self.stats['moves']
-        print('Done  moving from={} files={} elapsed={}/seconds'.format(source_path, end_moves - start_moves, round((end_ts - start_ts).total_seconds(), 3)))
+        self.logger.info('Done  moving from={} files={} elapsed={}/seconds'.format(source_path, end_moves - start_moves, round((end_ts - start_ts).total_seconds(), 3)))
 
     def move_one_file(self, input_fqn, output_fqn): # Different paths with the same file name
         input_gz = is_gz_file(input_fqn)
         if (input_gz and input_fqn[-3:] != '.gz') or ( not input_gz and input_fqn[-3:] == '.gz'):
-            print('ERROR: move source file extension and gzip contents do not match: ' + input_fqn)
+            self.logger.error('Move source file extension and gzip contents do not match: ' + input_fqn)
             self.stats['errors'] += 1
             return
         if not input_gz:
@@ -120,15 +151,15 @@ class ProcessMoves():
         input_bytes = os.stat(input_fqn).st_size
         if os.path.exists(output_fqn):
             if not file_compare(input_fqn, output_fqn):         # Fall thru to copy input to output
-                print('ERROR: move target exists: ' + output_fqn)
+                self.logger.error('Move target exists: ' + output_fqn)
                 self.stats['errors'] += 1
             else:
                 try:
                     os.remove(input_fqn)
-                    print('Removed input that matches file in repository: ' + input_fqn)
+                    self.logger.info('Removed input that matches file in repository: ' + input_fqn)
                     self.stats['skipped'] += 1
                 except Exception, e:
-                    print('ERROR: removing input that matches file in repostisory: ' + input_fqn)
+                    self.logger.error('Removing input that matches file in repostisory: ' + input_fqn)
                     self.stats['errors'] += 1
             return
             
@@ -136,7 +167,7 @@ class ProcessMoves():
             try:
                 rc = os.rename(input_fqn, output_fqn)
             except Exception, e:
-                print 'ERROR: "{}" moving file={}'.format(e, input_fqn)
+                self.logger.error('Moving file={} error: '.format(input_fqn, e))
                 self.stats['errors'] += 1
                 return
         else:
@@ -146,7 +177,7 @@ class ProcessMoves():
                         shutil.copyfileobj(fh_read, fh_write)
                 os.remove(input_fqn)
             except Exception, e:
-                print 'ERROR: "{}" gzip copy and remove file={}'.format(e, input_fqn)
+                self.logger.error('gzip copy and remove file={} error: '.format(input_fqn, e))
                 self.stats['errors'] += 1
                 return
     
@@ -157,7 +188,7 @@ class ProcessMoves():
         if self.perms:
             os.chmod(output_fqn, int(self.perms, 8))
 
-        print("Moved file={}, in_bytes={}, out_bytes={}".format(input_fqn, input_bytes, output_bytes))
+        self.logger.info("Moved file={}, in_bytes={}, out_bytes={}".format(input_fqn, input_bytes, output_bytes))
 
     def finish(self):
         pass

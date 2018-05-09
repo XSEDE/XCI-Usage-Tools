@@ -1,4 +1,4 @@
-#!/soft/metrics-tools/venv-1.0/bin/python
+#!/soft/usage-process-python/bin/python
 
 from __future__ import print_function
 import argparse
@@ -50,6 +50,25 @@ class RepositoryProcess():
         except ValueError, e:
             eprint('ERROR "{}" parsing config={}'.format(e, config_path))
             sys.exit(1)
+
+        # Initialize logging from arguments, or config file, or default to WARNING as last resort
+        numeric_log = None
+        if self.args.log is not None:
+            numeric_log = getattr(logging, self.args.log.upper(), None)
+        if numeric_log is None and 'LOG_LEVEL' in self.config:
+            numeric_log = getattr(logging, self.config['LOG_LEVEL'].upper(), None)
+        if numeric_log is None:
+            numeric_log = getattr(logging, 'WARNING', None)
+        if not isinstance(numeric_log, int):
+            raise ValueError('Invalid log level: {}'.format(numeric_log))
+        self.logger = logging.getLogger('DaemonLog')
+        self.logger.setLevel(numeric_log)
+        self.formatter = logging.Formatter(fmt='%(asctime)s.%(msecs)03d %(levelname)s %(message)s', \
+                                           datefmt='%Y/%m/%d %H:%M:%S')
+        self.handler = logging.handlers.TimedRotatingFileHandler(self.config['LOG_FILE'], when='W6', \
+                                                                 backupCount=999, utc=True)
+        self.handler.setFormatter(self.formatter)
+        self.logger.addHandler(self.handler)
 
         for c in ['file_status_file', 'source_dir', 'target_dir']:
             if not self.config.get(c, None):
