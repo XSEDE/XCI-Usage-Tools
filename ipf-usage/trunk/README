@@ -1,20 +1,35 @@
 ###############################################################################
 # How to install and configure ipf-usage
+# What happens when ipf-usage runs
+#    1. cron or interactive execution of upload_rabbitmq.sh
+#    2. upload_rabbitmq.sh executes
+#       upload_usage.py with a custom configuration file
+#    3. upload_usage.py 
+#       a. scans a configured directory for files matching a configured glob
+#       b. selects files that haven't been uploaded or changed since uploaded
+#       c. parses/converts each file if a parser was configured
+#       d. uploads each file or parsed/converted file to a configured target
+#       e. tracks previously uploaded files in a status file to not reprocess them
 ###############################################################################
 
 # Pre-requisites
   1. Python with virtualenv
 
-# Create install directory owned by the account that will upload files
+# Create the install directory owned by the account that will upload files
   $ mkdir /soft/ipf-usage
   $ chown <owner>.<group> /soft/ipf-usage
 
-# Perform the rest of this procedure from the account that will upload files
+# Create the python virtualenv directory owned by the account that will upload files
+  $ mkdir /soft/python-usage-1
+  $ chown <owner>.<group> /soft/python-usage-1
 
-# Install the package(s), create log directory
+# For the remaining steps, switch to the account that will upload files
+
+# Install the package(s)
   $ cd /soft/ipf-usage
   $ svn co https://software.xsede.org/svn/xci/source/usage-analysis/ipf-usage/trunk/ ./
-  $ mkdir var
+# Create log directory
+  $ mkdir /soft/ipf-usage/var
 
 # Generate SSH keys without a passphrase
   $ ssh-keygen -t rsa -f /soft/ipf-usage/conf/id_rsa
@@ -26,9 +41,9 @@
 # Review, update, and execute bin/python-venv-init.sh
   $ ./bin/python-venv-init.sh
 
-# Setup upload cron
 # Review and update bin/upload_rabbitmq.sh
 # Test by hand
   $ /soft/ipf-usage/bin/upload_rabbimq.sh
-# Install crontab:
+# Check logs in var/ and status in conf/
+# Install upload cron
   0 6 * * 1 /soft/ipf-usage/bin/upload_rabbitmq.sh
