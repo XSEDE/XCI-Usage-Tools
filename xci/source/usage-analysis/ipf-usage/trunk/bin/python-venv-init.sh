@@ -1,7 +1,6 @@
 #!/bin/bash
 
-MY_BASE="/soft/ipf-usage"
-VENV_BASE="${MY_BASE}/python-venv-1.0"
+VENV_BASE="/soft/python-usage-1"
 PYTHON_BASE="/soft/python-current"
 
 export LD_LIBRARY_PATH=${PYTHON_BASE}/lib
