@@ -206,6 +206,7 @@ class HandleUpload():
             my_status['remote_size'] = remote_stat.st_size
             self.stats['bytes'] += remote_stat.st_size                  # Total bytes
             self.stats['uploads'] += 1
+            self.logger.info('Uploaded  file={}, size={}'.format(remote_filename, remote_stat.st_size))
         except Exception, e:
             my_status['upload_rc'] = str(e)
             self.stats['errors'] += 1
