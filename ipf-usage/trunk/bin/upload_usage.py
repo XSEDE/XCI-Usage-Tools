@@ -169,7 +169,7 @@ class HandleUpload():
                 my_status['parser'] = PARSER
                 parse_command = [PARSER, local_fqn] # Parser first argument is the input fully qualified filename
                 subproc = subprocess.Popen(parse_command, bufsize=1, stdout=subprocess.PIPE)
-                temp_fqn = '/tmp/usage_{}.raw_usage.gz'.format(os.getpid())
+                temp_fqn = '/tmp/usage_{}.usage.gz'.format(os.getpid())
                 if os.path.isfile(temp_fqn):
                     os.remove(temp_fqn)
                 with gzip.open(temp_fqn, 'w') as temp_f:
@@ -179,20 +179,24 @@ class HandleUpload():
                 upload_fqn = temp_fqn
                 upload_stat = os.stat(upload_fqn)
                 my_status['upload_size'] = upload_stat.st_size
+                if local_filename[-3:] == '.gz':
+                    remote_filename = local_filename[:-3] + '.usage.csv.gz'
+                else:
+                    remote_filename = local_filename + '.usage.csv.gz'
 #           except subprocess.CalledProcessError, e:
             except Exception, e:
                 self.logger.error('Parsing step failed: {}'.format(e))
                 self.stats['skipped'] += 1
                 return
-            
         else:
             upload_fqn = local_fqn
             my_status['upload_size'] = local_filestat.st_size
+            remote_filename = local_filename
 
         my_status['log_size'] = local_filestat.st_size
         my_status['log_mtime'] = local_filemtime_str
         try:
-            remote_fqn = os.path.join(self.config.get('REMOTE_PATH', ''), local_filename)
+            remote_fqn = os.path.join(self.config.get('REMOTE_PATH', ''), remote_filename)
             remote_stat = self.scp_client.put(upload_fqn, remote_fqn, confirm=True)
             if my_status['upload_size'] == remote_stat.st_size:
                 my_status['upload_rc'] = ''
@@ -205,7 +209,7 @@ class HandleUpload():
         except Exception, e:
             my_status['upload_rc'] = str(e)
             self.stats['errors'] += 1
-            self.logger.error('scp_client.put "{}" failed: {}'.format(local_filename, e))
+            self.logger.error('scp_client.put "{}" failed: {}'.format(remote_filename, e))
 
     	self.UPLOAD_STATUS[local_fqn] = my_status
 
