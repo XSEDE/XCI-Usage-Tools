@@ -1,0 +1,5 @@
+1.1-1  Glue2 usage processing and several new generic tools
+1.0-4  Add more instructions to the README
+1.0-3  Correct Makefile
+1.0-2  Correct README to reference bin/*.cron
+1.0-1  Initial Release
