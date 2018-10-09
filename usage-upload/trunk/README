@@ -1,0 +1,76 @@
+###############################################################################
+#
+# usage-upload installation and execution instructions
+#
+###############################################################################
+#
+# Installing usage-upload:
+#
+Software pre-requisites:
+  - Python with Virtualenv
+
+Upload file pre-requisites:
+  - Files should contain log entries or pre-parsed XSEDE standard usage records
+  - Files should be rotated and include a date "YYYYMMDD" in the file name
+  - The current un-dated log or usage record file should not be uploaded
+
+1) Install to the default /usr/local/usage-upload or an alterate path
+  $ mkdir /usr/local/usage-upload/
+  $ mkdir /usr/local/usage-upload/downloads/
+  $ cd /usr/local/usage-upload/downloads/
+  # Download the desired production or development package from:
+  $ wget https://software.xsede.org/{production,development}/ \
+                usage-analysis/usage-upload-<ver>-<rel>.tgz
+  $ tar -xzf usage-upload-<ver>-<rel>.tgz
+  $ cd usage-upload-<ver>-<rel>/
+  # Customize the Makefile to change defaults
+  #   a.  Optionally customize the install PREFIX= /usr/local/usage-upload
+  #   b.  Optionally customize the Python PYTHON_PREFIX and PYTHON_LIB
+  $ vi Makefile
+  $ make install
+
+2) Generate SSH keys without a passpharse that this server will use to upload
+  $ ssh-keygen -t rsa -f /usr/local/usage-upload/etc/id_rsa
+
+3) Request access to upload usage to xci-usage.xsede.org
+  # Send to the Usage Collection Service (xci-usage.xsede.org) administrators
+  a. The generated id_rsa.pub public key
+  b. What application you are uploading usage for
+  c. What host(s) you are uploading from
+
+  # The reply will include instructions on what remote account and path to
+  #     upload files to
+
+###############################################################################
+#
+# Setting up an application specific usage upload process
+# This step can be repeated with different APP=... values
+#
+
+3) Initialize a custom upload application
+  $ make APP=myapp-usage uploadapp
+
+4) Configure the new custom upload application
+  $ vi /usr/local/usage-upload/etc/upload_myapp-usage.conf
+
+5) Test the new custom upload appplication
+  $ /usr/local/usage-upload/bin/upload_myapp-usage.cron
+
+6) Run automatically in cron
+  CRON: 10 6 * * 0 /usr/local/usage-upload/bin/upload_myapp-usage.cron
+
+
+###############################################################################
+#
+# How does an upload work?
+#
+  1. cron or interactive execution of
+     bin/upload_myapp-usage.cron
+  2. which executes bin/upload_usage.py with a custom configuration file
+     etc/upload_myapp-usage.conf
+  3. which scans a selected directory for files matching a configured glob
+  4. selects files that haven't been uploaded or changed since uploaded
+  5. parses/converts each file IF a parser was configured
+  6. uploads each file or parsed/converted file to a configured target
+  7. tracks previously uploaded files in a status file to not reprocess them
+     /usr/local/usage-upload/etc/upload_myapp-usage_status.json
