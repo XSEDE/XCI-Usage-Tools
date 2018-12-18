@@ -42,7 +42,7 @@ fi
 
 BASE="/incoming/home"
 
-useradd --create-home --base-dir ${BASE} --comment "${DESCRIPTION}" --gid incoming --shell /bin/scponly --skel /soft/incoming-admin/skel ${LOGIN}
+useradd --create-home --base-dir ${BASE} --comment "${DESCRIPTION}" --gid incoming --shell /bin/scponly --skel /soft/usage-process/skel ${LOGIN}
 if [[ $? != 0 ]]; then
     echo "useradd failed with rc=$?"
     exit 1
