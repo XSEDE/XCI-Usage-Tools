@@ -34,6 +34,7 @@ Upload file pre-requisites:
 
 3) Request access to upload usage to xci-usage.xsede.org
   # Send to the Usage Collection Service (xci-usage.xsede.org) administrators
+    by e-mailing help@xsede.org with Subject: XCI usage upload access
   a. The generated id_rsa.pub public key
   b. What application you are uploading usage for
   c. What host(s) you are uploading from
