@@ -76,16 +76,17 @@ Examples of <myapp> are:
 
 ###############################################################################
 #
-# The following material is background on how the various scripts work.
-# Read only if you want to know or to help you debug issues
+# Detailed usage-upload execution flow description
 #
-  1. Upload started by a cron or interactive execution of
+# This is background material and not part of the installation instructions.
+#
+  1. Processing started by a cron or the interactive execution of
      bin/upload_<myapp>.cron
-  2. which executes bin/upload_usage.py with a custom configuration file
+  2. Which executes bin/upload_usage.py with a custom configuration file
      etc/upload_<myapp>.conf
-  3. which scans a selected directory for files matching a configured glob
-  4. selects files that haven't been uploaded or changed since uploaded
-  5. parses/converts each file IF a parser was configured
-  6. uploads each file or parsed/converted file to a configured target
-  7. tracks previously uploaded files in a status file to not reprocess them
+  3. Which scans a selected directory for files matching a configured glob
+  4. Selects files that haven't been uploaded or that changed since uploaded
+  5. Parses/converts each file IF a parser was configured
+  6. Uploads each file or parsed/converted file to a configured target
+  7. Tracks previously uploaded files in a status file to not reprocess them
      /usr/local/usage-upload/etc/upload_<myapp>_status.json
