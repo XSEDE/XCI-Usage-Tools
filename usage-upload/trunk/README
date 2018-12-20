@@ -6,13 +6,17 @@
 #
 # Installing usage-upload:
 #
-Software pre-requisites:
-  - Python with Virtualenv
+Pre-requiesites are:
+  - A Python with virtualenv
+    To check execute:
+       $ python
+       ....
+       >>> import virtualenv
 
-Upload file pre-requisites:
-  - Files should contain log entries or pre-parsed XSEDE standard usage records
-  - Files should be rotated and include a date "YYYYMMDD" in the file name
-  - The current un-dated log or usage record file should not be uploaded
+  - Usage files containing log entries or pre-parsed XSEDE standard usage records
+  - Usage Files that are rotated ith file names that include a date "YYYYMMDD"
+    For example:
+       messages-20181201.log
 
 1) Install to the default /usr/local/usage-upload or an alterate path
   $ mkdir /usr/local/usage-upload/
@@ -23,55 +27,65 @@ Upload file pre-requisites:
                 usage-analysis/usage-upload-<ver>-<rel>.tgz
   $ tar -xzf usage-upload-<ver>-<rel>.tgz
   $ cd usage-upload-<ver>-<rel>/
-  # Customize the Makefile to change defaults
-  #   a.  Optionally customize the install PREFIX= /usr/local/usage-upload
-  #   b.  Optionally customize the Python PYTHON_PREFIX and PYTHON_LIB
+  # Update the Makefile CUSTOMIZE variables
+  #   a.  Set PREFIX to the usage-upload directory: PREFIX= /usr/local/usage-upload
+  #   b.  Set PYTHON_PREFIX and PYTHON_LIB to point to the Python with virtualenv
+
   $ vi Makefile
   $ make install
 
 2) Generate SSH keys without a passpharse that this server will use to upload
   $ ssh-keygen -t rsa -f /usr/local/usage-upload/etc/id_rsa
 
-3) Request access to upload usage to xci-usage.xsede.org
-  # Send to the Usage Collection Service (xci-usage.xsede.org) administrators
-    by e-mailing help@xsede.org with Subject: XCI usage upload access
+3) Request access to upload usage to xci-usage.xsede.org by e-mailing
+     the Usage Collection Service (xci-usage.xsede.org) administrators
+     at help@xsede.org with the Subject: XCI usage upload access
+     and supply this informaiton:
   a. The generated id_rsa.pub public key
-  b. What application you are uploading usage for
-  c. What host(s) you are uploading from
+  b. The application name (cilogin, ssohub, etc.) you are uploading usage for
+  c. The host(s) you will be uploading from
 
-  # The reply will include instructions on what remote account and path to
-  #     upload files to
+  # Administrators will reply with instructions that include:
+  - The ssh account you can use to upload files
+  - The subdirectory on the upload server to copy files to
 
 ###############################################################################
 #
-# Setting up an application specific usage upload process
-# This step can be repeated with different APP=... values
-#
+# Each installation of the usage-upload software can be used to upload usage for
+#   multiple applications. Repeat the following steps once for each application
+#   upload process. Use a different <myapp> value for each application.
+#   
 
-3) Initialize a custom upload application
-  $ make APP=myapp-usage uploadapp
+3) Initialize an application upload process
+  $ make APP=<myapp> uploadapp
 
-4) Configure the new custom upload application
-  $ vi /usr/local/usage-upload/etc/upload_myapp-usage.conf
+4) Configure the upload by reviewing and updating LOCAL_DIRECTORY, LOCAL_GLOB,
+      REMOTE_USERNAME, REMOTE_PATH, and optionally LOG_PARSER if you have a parser
+      to produce stardard usage records
+  $ vi /usr/local/usage-upload/etc/upload_<myapp>.conf
 
 5) Test the new custom upload appplication
-  $ /usr/local/usage-upload/bin/upload_myapp-usage.cron
+  $ /usr/local/usage-upload/bin/upload_<myapp>.cron
 
 6) Run automatically in cron
-  CRON: 10 6 * * 0 /usr/local/usage-upload/bin/upload_myapp-usage.cron
+  CRON: 10 6 * * 0 /usr/local/usage-upload/bin/upload_<myapp>.cron
 
+Examples of <myapp> are:
+  cilogon-usage
+  ssohub-usage
 
 ###############################################################################
 #
-# How does an upload work?
+# The following material is background on how the various scripts work.
+# Read only if you want to know or to help you debug issues
 #
-  1. cron or interactive execution of
-     bin/upload_myapp-usage.cron
+  1. Upload started by a cron or interactive execution of
+     bin/upload_<myapp>.cron
   2. which executes bin/upload_usage.py with a custom configuration file
-     etc/upload_myapp-usage.conf
+     etc/upload_<myapp>.conf
   3. which scans a selected directory for files matching a configured glob
   4. selects files that haven't been uploaded or changed since uploaded
   5. parses/converts each file IF a parser was configured
   6. uploads each file or parsed/converted file to a configured target
   7. tracks previously uploaded files in a status file to not reprocess them
-     /usr/local/usage-upload/etc/upload_myapp-usage_status.json
+     /usr/local/usage-upload/etc/upload_<myapp>_status.json

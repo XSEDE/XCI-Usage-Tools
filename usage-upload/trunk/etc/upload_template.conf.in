@@ -1,12 +1,12 @@
 {
- "LOCAL_DIRECTORY": "/var/log/CONFIGURE",
+ "LOCAL_DIRECTORY": "<USAGE_FILE_DIRECTORY>",
  "LOCAL_GLOB": "rabbit@info?.log-20[0-9][0-9][0-9][0-9][0-9][0-9]*",
  "UPLOAD_STATUS_FILE": "%PREFIX%/etc/upload_%APP%_status.json",
  "RSA_KEY": "%PREFIX%/etc/id_rsa",
  "LOG_PARSER": "%PREFIX%/bin/CONFIGURE_parser.py",
  "REMOTE_HOSTNAME": "xci-metrics.xsede.org",
  "REMOTE_PORT": 22,
- "REMOTE_USERNAME": "CONFIGURE",
- "REMOTE_PATH": "CONFIGURE/",
+ "REMOTE_USERNAME": "<UPLOAD_ACCOUNT>",
+ "REMOTE_PATH": "<UPLOAD_DIRECTORY>/",
  "LOG_FILE": "%PREFIX%/var/upload_%APP%.log"
 }
