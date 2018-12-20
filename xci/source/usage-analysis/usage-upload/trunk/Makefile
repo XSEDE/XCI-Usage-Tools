@@ -2,9 +2,15 @@
 VER= $(shell cat VERSION)
 REL= $(shell cat RELEASE)
 SHELL= /bin/bash
+#----------------------------------------------------
+# CUSTOMIZE THE FOLLOWING VARIABLES
+#
 PREFIX= /soft/usage-upload
 PYTHON_PREFIX= /
 PYTHON_LIB= /lib64
+#
+# CUSTOMIZE END
+#----------------------------------------------------
 
 BUNDLE_NAME= usage-upload-$(VER)-$(REL)
 SOURCE_NAME= usage-upload-$(VER)
@@ -19,7 +25,7 @@ help:
 	@echo
 	@echo 'Available Targes:'
 	@echo '  make install'
-	@echo '  make APP=<app> uploadapp'
+	@echo '  make APP=<myapp> uploadapp'
 	@echo '  make package'
 	@echo '  make upload'
 	@echo
