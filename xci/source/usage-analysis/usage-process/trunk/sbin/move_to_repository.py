@@ -131,14 +131,14 @@ class ProcessMoves():
         if not os.path.isdir(dest_path):
             self.logger.error('Move destination is not a directory: ' + dest_path)
             return
-        self.logger.info('Start moving from={} to={}'.format(source_path, dest_path))
+        self.logger.debug('Start moving from={} to={}'.format(source_path, dest_path))
 
      	move_filenames = [f for f in os.listdir(source_path) if os.path.isfile(os.path.join(source_path, f))]
         for filename in move_filenames:
             rc = self.move_one_file(os.path.join(source_path, filename), os.path.join(dest_path, filename))
         end_ts = datetime.now(utc)
         end_moves = self.stats['moves']
-        self.logger.info('Done  moving from={} files={} elapsed={}/seconds'.format(source_path, end_moves - start_moves, round((end_ts - start_ts).total_seconds(), 3)))
+        self.logger.debug('Done  moving from={} files={} elapsed={}/seconds'.format(source_path, end_moves - start_moves, round((end_ts - start_ts).total_seconds(), 3)))
 
     def move_one_file(self, input_fqn, output_fqn): # Different paths with the same file name
         input_gz = is_gz_file(input_fqn)
@@ -156,10 +156,10 @@ class ProcessMoves():
             else:
                 try:
                     os.remove(input_fqn)
-                    self.logger.info('Removed input that matches file in repository: ' + input_fqn)
+                    self.logger.debug('Removed input that matches file in repository: ' + input_fqn)
                     self.stats['skipped'] += 1
                 except Exception, e:
-                    self.logger.error('Removing input that matches file in repostisory: ' + input_fqn)
+                    self.logger.error('Removing input that matches file={} in repostisory error: {}'.format(input_fqn, e))
                     self.stats['errors'] += 1
             return
             
@@ -177,7 +177,7 @@ class ProcessMoves():
                         shutil.copyfileobj(fh_read, fh_write)
                 os.remove(input_fqn)
             except Exception, e:
-                self.logger.error('gzip copy and remove file={} error: '.format(input_fqn, e))
+                self.logger.error('gzip copy and remove file={} error: {}'.format(input_fqn, e))
                 self.stats['errors'] += 1
                 return
     
