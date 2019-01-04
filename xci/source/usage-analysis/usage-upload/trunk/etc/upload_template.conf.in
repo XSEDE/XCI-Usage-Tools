@@ -3,7 +3,7 @@
  "LOCAL_GLOB": "rabbit@info?.log-20[0-9][0-9][0-9][0-9][0-9][0-9]*",
  "UPLOAD_STATUS_FILE": "%PREFIX%/etc/upload_%APP%_status.json",
  "RSA_KEY": "%PREFIX%/etc/id_rsa",
- "LOG_PARSER": "%PREFIX%/bin/CONFIGURE_parser.py",
+ "LOG_PARSER": "%PREFIX%/bin/<LOG_PARSER>",
  "REMOTE_HOSTNAME": "xci-metrics.xsede.org",
  "REMOTE_PORT": 22,
  "REMOTE_USERNAME": "<UPLOAD_ACCOUNT>",
