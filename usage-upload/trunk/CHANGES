@@ -1,3 +1,4 @@
+1.2-1  Fixes for Python 3.6.x, small logging improvements
 1.1-3  Clarify in documentation and sample configuration files where <values> need to be set
 1.1-2  Clarify in documentation how to request access to the usage xci-usage server
 1.1-1  Glue2 usage processing and several new generic tools
