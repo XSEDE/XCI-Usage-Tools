@@ -49,7 +49,7 @@ if __name__ == '__main__':
 
     matches = 0
     for line in input:
-        match_line = re.search(REGEX_LINE, line..decode('utf-8'))
+        match_line = re.search(REGEX_LINE, line.decode('utf-8'))
         if not match_line:
             continue
 
