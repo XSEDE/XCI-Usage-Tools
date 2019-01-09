@@ -28,9 +28,9 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         file = sys.argv[1]      # First arg after program name, 0 indexed
         if file[-3:] == '.gz':
-            input_fd = gzip.open(file, mode='r')
+            input_fd = gzip.open(file, mode='rt')
         else:
-            input_fd = open(file, 'r')
+            input_fd = open(file, 'rt')
     else:
         input_fd = sys.stdin
 

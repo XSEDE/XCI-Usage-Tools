@@ -1,4 +1,4 @@
-.PHONY: python-virtualenv uploadapp package upload
+.PHONY: python-virtualenv uploadapp usage_tools package upload
 VER= $(shell cat VERSION)
 REL= $(shell cat RELEASE)
 SHELL= /bin/bash
@@ -8,6 +8,8 @@ SHELL= /bin/bash
 PREFIX= /soft/usage-upload
 PYTHON_PREFIX= /
 PYTHON_LIB= /lib64
+#PYTHON_PREFIX= /Library/Frameworks/Python.framework/Versions/3.6
+#PYTHON_LIB= /Library/Frameworks/Python.framework/Versions/3.6/lib
 #
 # CUSTOMIZE END
 #----------------------------------------------------
@@ -34,14 +36,12 @@ install: python-virtualenv
 	@echo "** Installing usage-upload-$(VER)-$(REL)"
 	@if [ ! -d $(PREFIX)/bin ] ; then mkdir $(PREFIX)/bin ; fi
 	@if [ ! -d $(PREFIX)/etc ] ; then mkdir $(PREFIX)/etc ; fi
+	@if [ ! -d $(PREFIX)/tmp ] ; then mkdir $(PREFIX)/tmp ; fi
+	@if [ ! -d $(PREFIX)/upload ] ; then mkdir $(PREFIX)/upload ; fi
 	@if [ ! -d $(PREFIX)/var ] ; then mkdir $(PREFIX)/var ; fi
-	sed -e "s|%PREFIX%|$(PREFIX)|g" \
-	   bin/rabbitmq_parser.py.in >$(PREFIX)/bin/rabbitmq_parser.py
-	chmod 755 $(PREFIX)/bin/rabbitmq_parser.py
 	sed -e "s|%PREFIX%|$(PREFIX)|g" \
 	   bin/upload_usage.py.in >$(PREFIX)/bin/upload_usage.py
 	chmod 755 $(PREFIX)/bin/upload_usage.py
-    cp -p bin/
 
 python-virtualenv: $(VENV_BASE)/bin/python
 
@@ -53,22 +53,32 @@ $(VENV_BASE)/bin/python:
 	    pip --no-cache-dir install paramiko; \
 	    pip --no-cache-dir install pytz )
 
-uploadapp: uploadapp_var $(PREFIX)/bin/upload_$(APP).cron $(PREFIX)/etc/upload_$(APP).conf
+ifeq ($(APP),glue2)
+CRON_SRC=bin/upload_glue2.cron.in
+uploadapp: uploadapp_var usage_tools $(PREFIX)/bin/upload_$(APP).cron $(PREFIX)/etc/upload_$(APP).conf $(PREFIX)/bin/$(APP)_history_parser.conf $(PREFIX)/bin/upload_$(APP).sh
+else
+CRON_SRC=bin/upload_template.cron.in
+uploadapp: uploadapp_var usage_tools $(PREFIX)/bin/upload_$(APP).cron $(PREFIX)/etc/upload_$(APP).conf $(PREFIX)/bin/$(APP)_parser.conf
+endif
 
 uploadapp_var:
 	$(if $(APP),, $(error APP variable not set))
 
+usage_tools:
+	@cp -p bin/usage_sync.py $(PREFIX)/bin/usage_sync.py
+	@cp -p bin/usage_splitter.py $(PREFIX)/bin/usage_splitter.py
+    
 $(PREFIX)/bin/upload_$(APP).cron:
 	@echo "** Generating $(PREFIX)/bin/upload_$(APP).cron"
 	@sed -e "s|%PREFIX%|$(PREFIX)|g" \
 	    -e "s|%PYTHON_PREFIX%|$(PYTHON_PREFIX)|g" \
 	    -e "s|%PYTHON_LIB%|$(PYTHON_LIB)|g" \
 	    -e "s|%APP%|$(APP)|g" \
-	   bin/upload_template.cron.in >$(PREFIX)/bin/upload_$(APP).cron
+	    $(CRON_SRC) >$(PREFIX)/bin/upload_$(APP).cron
 	@chmod 755 $(PREFIX)/bin/upload_$(APP).cron
-    ifeq ($(APP),glue2)
-        cp -p bin/upload_$(APP).sh $(PREFIX)/bin/upload_$(APP).sh
-    endif
+
+$(PREFIX)/bin/upload_$(APP).sh:
+	@cp -p bin/upload_$(APP).sh $(PREFIX)/bin/upload_$(APP).sh
 
 $(PREFIX)/etc/upload_$(APP).conf:
 	@echo "** Generating $(PREFIX)/etc/upload_$(APP).conf"
@@ -78,6 +88,16 @@ $(PREFIX)/etc/upload_$(APP).conf:
 	    -e "s|%APP%|$(APP)|g" \
 	   etc/upload_template.conf.in >$(PREFIX)/etc/upload_$(APP).conf
 	@chmod 644 $(PREFIX)/etc/upload_$(APP).conf
+
+$(PREFIX)/bin/$(APP)_parser.conf:
+	@sed -e "s|%PREFIX%|$(PREFIX)|g" \
+	   bin/$(APP)_parser.py.in >$(PREFIX)/bin/$(APP)_parser.py
+	chmod 755 $(PREFIX)/bin/$(APP)_parser.py
+
+$(PREFIX)/bin/$(APP)_history_parser.conf:
+	@sed -e "s|%PREFIX%|$(PREFIX)|g" \
+	   bin/$(APP)_history_parser.py >$(PREFIX)/bin/$(APP)_history_parser.py
+	chmod 755 $(PREFIX)/bin/$(APP)_history_parser.py
 
 package:
 	@echo "** Building package $(BUILD_BASE)/$(BUNDLE_NAME).tgz"
