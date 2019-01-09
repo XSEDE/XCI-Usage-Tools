@@ -41,6 +41,7 @@ install: python-virtualenv
 	sed -e "s|%PREFIX%|$(PREFIX)|g" \
 	   bin/upload_usage.py.in >$(PREFIX)/bin/upload_usage.py
 	chmod 755 $(PREFIX)/bin/upload_usage.py
+    cp -p bin/
 
 python-virtualenv: $(VENV_BASE)/bin/python
 
@@ -65,6 +66,9 @@ $(PREFIX)/bin/upload_$(APP).cron:
 	    -e "s|%APP%|$(APP)|g" \
 	   bin/upload_template.cron.in >$(PREFIX)/bin/upload_$(APP).cron
 	@chmod 755 $(PREFIX)/bin/upload_$(APP).cron
+    ifeq ($(APP),glue2)
+        cp -p bin/upload_$(APP).sh $(PREFIX)/bin/upload_$(APP).sh
+    endif
 
 $(PREFIX)/etc/upload_$(APP).conf:
 	@echo "** Generating $(PREFIX)/etc/upload_$(APP).conf"
