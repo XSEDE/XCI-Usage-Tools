@@ -1,5 +1,0 @@
-#!/bin/bash
-
-MY_BASE="/soft/usage-upload"
-export LD_LIBRARY_PATH="/soft/python-current/lib"
-${MY_BASE}/bin/upload_usage.py -l info -c ${MY_BASE}/etc/upload_rabbitmq.conf

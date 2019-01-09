@@ -18,7 +18,8 @@ echo "*** Processing GLUE2 type '${TYPE}' at `date` ***"
 HOME=/soft/usage-upload
 TMP=${HOME}/tmp
 UPLOAD=${HOME}/upload
-RAW_FILE=${TMP}/${TYPE}
+HOSTNAME=`hostname -s`
+RAW_FILE="${TMP}/${TYPE}@${HOSTNAME}"
 
 cd ${TMP}
 if [ $? -ne 0 ]; then
@@ -36,7 +37,6 @@ fi
 #select pg_xlog_replay_pause();
 #\o /dev/null
 #select pg_xlog_replay_resume();
-PGPASSWORD={{ GLUE2_PASS }}
 psql -a -h <DB_HOSTNAME> -U glue2_owner warehouse <<EOF
 \copy (select "ResourceID" as "USE_CLIENT", to_char("ReceivedTime",'YYYY-MM-DD"T"HH24:MI:SSZ') as "USE_TIMESTAMP" from glue2.glue2_db_entityhistory where "DocumentType"='${TYPE}' and age("ReceivedTime") between interval '1 day' and interval '15 days') to '${RAW_FILE}' with CSV header quote as '|';
 EOF
@@ -49,4 +49,4 @@ ${HOME}/bin/usage_splitter.py ${RAW_FILE}
 for f in ${TMP}/${TYPE}-20*; do
     [ -e "$f" ] && gzip $f
 done
-${HOME}/bin/usage_sync.py ${TMP} "${TYPE}-20[0-9][0-9][0-9][0-9][0-9][0-9]*" ${UPLOAD}
+${HOME}/bin/usage_sync.py ${TMP} "${TYPE}@${HOSTNAME}-20[0-9][0-9][0-9][0-9][0-9][0-9]*" ${UPLOAD}
