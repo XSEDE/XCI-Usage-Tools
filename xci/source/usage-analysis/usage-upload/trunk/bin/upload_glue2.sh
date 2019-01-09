@@ -36,7 +36,8 @@ fi
 #select pg_xlog_replay_pause();
 #\o /dev/null
 #select pg_xlog_replay_resume();
-psql -a -h infodb.xsede.org -U glue2_owner warehouse <<EOF
+PGPASSWORD={{ GLUE2_PASS }}
+psql -a -h <DB_HOSTNAME> -U glue2_owner warehouse <<EOF
 \copy (select "ResourceID" as "USE_CLIENT", to_char("ReceivedTime",'YYYY-MM-DD"T"HH24:MI:SSZ') as "USE_TIMESTAMP" from glue2.glue2_db_entityhistory where "DocumentType"='${TYPE}' and age("ReceivedTime") between interval '1 day' and interval '15 days') to '${RAW_FILE}' with CSV header quote as '|';
 EOF
 
