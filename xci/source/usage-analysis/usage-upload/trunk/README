@@ -1,78 +1,99 @@
 ###############################################################################
 #
-# usage-upload installation and execution instructions
+# usage-upload deployment instructions
 #
 ###############################################################################
 #
-# Installing usage-upload:
+# Pre-requisites
 #
-Pre-requiesites are:
-  - A Python with virtualenv
-    To check execute:
-       $ python
-       ....
-       >>> import virtualenv
+ a) Any Python 2.7 or 3.x with virtualenv
+    Use the path to this Python to configuring the Makefile below
 
-  - Usage files containing log entries or pre-parsed XSEDE standard usage records
-  - Usage Files that are rotated ith file names that include a date "YYYYMMDD"
-    For example:
+ b) Usage files containing log entries or pre-parsed XSEDE standard usage records,
+    which are rotated and have names that include a date "YYYYMMDD", for example:
        messages-20181201.log
 
-1) Install to the default /usr/local/usage-upload or an alterate path
-  $ mkdir /usr/local/usage-upload/
-  $ mkdir /usr/local/usage-upload/downloads/
-  $ cd /usr/local/usage-upload/downloads/
-  # Download the desired production or development package from:
-  $ wget https://software.xsede.org/{production,development}/ \
-                usage-analysis/usage-upload-<ver>-<rel>.tgz
-  $ tar -xzf usage-upload-<ver>-<rel>.tgz
-  $ cd usage-upload-<ver>-<rel>/
-  # Update the Makefile CUSTOMIZE variables
-  #   a.  Set PREFIX to the usage-upload directory: PREFIX= /usr/local/usage-upload
-  #   b.  Set PYTHON_PREFIX and PYTHON_LIB to point to the Python with virtualenv
+###############################################################################
+#
+# Installing usage-upload
+# These instructions use a default install PREFIX=/usr/local/usage-upload
+# If you choose an alternate PREFIX, adjust these instructions accordingly
+#
 
-  $ vi Makefile
+1) Always define the install directory PREFIX before executing these instructions
+     If using sh/bash
+  $ export PREFIX=/usr/local/usage-upload
+     if using csh/tcsh
+  $ setenv PREFIX /usr/local/usage-upload
+
+  $ mkdir $PREFIX
+   
+#
+2) Install
+  $ mkdir $PREFIX/downloads/
+  $ cd $PREFIX/downloads/
+
+  ## Browse https://software.xsede.org/development/usage-analysis/
+  ##   and note the most recent VERSION and RELEASE of this software
+  ## For example for usage-upload-1.4-1.README and usage-upload-1.4-1.tgz
+  ##   have VERSION=1.4 and RELEASE=1
+
+  $ wget https://software.xsede.org/development/usage-analysis/usage-upload-<VERSION>-<RELEASE>.tgz
+  $ tar -xzf usage-upload-<VERSION>-<RELEASE>.tgz
+  $ cd usage-upload-<VERSION>-<RELEASE>/
+
+  # Edit the Makefile to set the following variables 
+    Set PREFIX to the value you used in step 1) above
+      For example PREFIX=/usr/local/usage-upload
+    Set PYTHON_PREFIX to the base directory of the Python with virtualenv
+      Usually the parent directory where bin/python is found
+      For example given /usr/bin/python set PYTHON_PREFIX=/usr
+    Set PYTHON_LIB to the library sub-directory of your Python 
+      This is usually the lib/ sub-directory of PYTHON_PREFIX
+
   $ make install
 
-2) Generate SSH keys without a passpharse that this server will use to upload
-  $ ssh-keygen -t rsa -f /usr/local/usage-upload/etc/id_rsa
-
-3) Request access to upload usage to xci-usage.xsede.org by e-mailing
-     the Usage Collection Service (xci-usage.xsede.org) administrators
-     at help@xsede.org with the Subject: XCI usage upload access
-     and supply this informaiton:
-  a. The generated id_rsa.pub public key
-  b. The application name (cilogin, ssohub, etc.) you are uploading usage for
-  c. The host(s) you will be uploading from
-
-  # Administrators will reply with instructions that include:
-  - The ssh account you can use to upload files
-  - The subdirectory on the upload server to copy files to
+3) Generate an SSH key pay without a passpharse to be used to upload files
+  $ ssh-keygen -t rsa -f $PREFIX/etc/id_rsa
 
 ###############################################################################
 #
-# Each installation of the usage-upload software can be used to upload usage for
-#   multiple applications. Repeat the following steps once for each application
-#   upload process. Use a different <myapp> value for each application.
+# The usage-upload software can be used to upload usage for multiple applications.
+# The following steps can be repeated for each application using different values
+#   of <MYAPP>
+# Make use the PREFIX to the usage-upload software is defined as shows in 1) above
+# Use the same ssh key pair to upload usage for all applications on a given server
 #   
 
-3) Initialize an application upload process
-  $ make APP=<myapp> uploadapp
+4) Request access to upload usage files to the Usage Collection Service (xci-usage.xsede.org)
 
-4) Configure the upload by reviewing and updating LOCAL_DIRECTORY, LOCAL_GLOB,
-      REMOTE_USERNAME, REMOTE_PATH, and optionally LOG_PARSER if you have a parser
-      to produce stardard usage records
-  $ vi /usr/local/usage-upload/etc/upload_<myapp>.conf
+   # E-mail help@xsede.org with the "Subject: XCI usage upload access" and this information:
+   a. Attach the generated public key file id_rsa.pub, or include the contents of the file in the e-mail
+   b. Include the name of the application <MYAPP> (i.e. cilogin, ssohub, ...) the usage data is from
+   c. Include the hostname(s) you will be uploading usage data from
 
-5) Test the new custom upload appplication
-  $ /usr/local/usage-upload/bin/upload_<myapp>.cron
+  # Usage Collection Service administrators will reply with instructions that include:
+   d. The ssh target account to upload usage files to
+   e. The subdirectory to oupload usage files to
 
-6) Run automatically in cron
-  CRON: 10 6 * * 0 /usr/local/usage-upload/bin/upload_<myapp>.cron
+5) Initialize an application upload process
+  $ cd $PREFIX
+  $ make APP=<MYAPP> uploadapp
 
-Examples of <myapp> are:
-  cilogon-usage
-  ssohub-usage
+6) Edit the $PREFIX/etc/upload_<MYAPP>.conf to set the following variables
+   LOCAL_DIRECTORY -> where the usage files are located
+   LOCAL_GLOB -> the shell glob of which rotated usage files need to be uploaded
+   REMOTE_USERNAME -> the ssh target account you received in step 4) above
+   REMOTE_PATH -> the subdirectory you received in step 4) above
+       Usually "<MYAPP>/", for example "ssohob/"
+   Optionally LOG_PARSER if you have a parser that produces stardard usage records
+
+7) Test the new custom upload appplication
+  $ $PREFIX/bin/upload_<MYAPP>.cron
+
+8) Define the cron entry to run the upload automatically
+  # Use appropriate values of <PREFIX> and <MYAPP>
+  CRON: 10 6 * * 0 <PREFIX>/bin/upload_<MYAPP>.cron
 
 ###############################################################################
 #
@@ -80,13 +101,14 @@ Examples of <myapp> are:
 #
 # This is background material and not part of the installation instructions.
 #
-  1. Processing started by a cron or the interactive execution of
-     bin/upload_<myapp>.cron
-  2. Which executes bin/upload_usage.py with a custom configuration file
-     etc/upload_<myapp>.conf
-  3. Which scans a selected directory for files matching a configured glob
+  1. Processing started by cron or  interactive execution of
+     bin/upload_<MYAPP>.cron
+  2. Which executes bin/upload_usage.py with the the configuration file
+     etc/upload_<MYAPP>.conf
+  3. Which scans the selected LOCAL_DIRECTORY for files matching LOCAL_GLOB
   4. Selects files that haven't been uploaded or that changed since uploaded
   5. Parses/converts each file IF a parser was configured
-  6. Uploads each file or parsed/converted file to a configured target
-  7. Tracks previously uploaded files in a status file to not reprocess them
-     /usr/local/usage-upload/etc/upload_<myapp>_status.json
+  6. Uploads each file or parsed/converted file to the xci-usage server
+     and REMOTE_USERNAME account and REMOTE_PATH subdirectory
+  7. Tracks uploaded file status so that only new/changed files are uploaded in each run
+     $PREFIX/etc/upload_<MYAPP>_status.json
