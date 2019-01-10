@@ -1,3 +1,4 @@
+1.4-2  Major improvements to the README installation instructions
 1.4-1  Fix Makefile so it correctly installs all necessary APP=glue2 files
 1.3-2  Generalize app config template by removing by merging 'rabbit@' into configurable glob
 1.3-1  Fix rabbitmq_parser.py problem Python3 problem processing bytes that aren't decoded
