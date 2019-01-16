@@ -1,3 +1,4 @@
+1.5-3  Replace ". script" with "source script"
 1.5-2  Fix Makefile so that targets install, uploadapp overwrite previous installs
 1.5-1  Fix cron Python activation
 1.4-2  Major improvements to the README installation instructions
