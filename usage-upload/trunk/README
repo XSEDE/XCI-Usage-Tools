@@ -6,7 +6,12 @@
 #
 # Pre-requisites
 #
- a) Any Python 2.7 or 3.x with virtualenv
+ a) Any Python 2.7 or 3.x plus Python virtualenv
+    On CentOS/RedHat 7.x install RPMs:
+      python-2.7.5 and python-virtualenv
+        OR
+      python34-3.4.9 and python34-virtualenv
+
     Use the path to this Python to configuring the Makefile below
 
  b) Usage files containing log entries or pre-parsed XSEDE standard usage records,
@@ -77,7 +82,8 @@
    e. The subdirectory to oupload usage files to
 
 5) Initialize an application upload process
-  $ cd $PREFIX
+  # First go to the downloaded source directory
+  $ cd $PREFIX/download/usage-upload-<VERSION>-<RELEASE>/
   $ make APP=<MYAPP> uploadapp
 
 6) Edit the $PREFIX/etc/upload_<MYAPP>.conf to set the following variables

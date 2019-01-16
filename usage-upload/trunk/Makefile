@@ -6,8 +6,8 @@ SHELL= /bin/bash
 # CUSTOMIZE THE FOLLOWING VARIABLES
 #
 PREFIX= /soft/usage-upload
-PYTHON_PREFIX= /
-PYTHON_LIB= /lib64
+PYTHON_PREFIX= /usr
+PYTHON_LIB= /usr/lib64
 #PYTHON_PREFIX= /Library/Frameworks/Python.framework/Versions/3.6
 #PYTHON_LIB= /Library/Frameworks/Python.framework/Versions/3.6/lib
 #
@@ -50,15 +50,16 @@ $(VENV_BASE)/bin/python:
 	LD_LIBRARY_PATH=${PYTHON_LIB} $(PYTHON_PREFIX)/bin/virtualenv $(VENV_BASE)
 	( export LD_LIBRARY_PATH=${PYTHON_LIB} ; \
 	    source $(VENV_BASE)/bin/activate ; \
+        pip --no-cache-dir install --upgrade pip; \
 	    pip --no-cache-dir install paramiko; \
 	    pip --no-cache-dir install pytz )
 
 ifeq ($(APP),glue2)
 CRON_SRC=bin/upload_glue2.cron.in
-uploadapp: uploadapp_var usage_tools $(PREFIX)/bin/upload_$(APP).cron $(PREFIX)/etc/upload_$(APP).conf $(PREFIX)/bin/$(APP)_history_parser.conf $(PREFIX)/bin/upload_$(APP).sh
+uploadapp: uploadapp_var usage_tools $(PREFIX)/bin/upload_$(APP).cron $(PREFIX)/etc/upload_$(APP).conf $(PREFIX)/bin/$(APP)_history_parser.py $(PREFIX)/bin/upload_$(APP).sh
 else
 CRON_SRC=bin/upload_template.cron.in
-uploadapp: uploadapp_var usage_tools $(PREFIX)/bin/upload_$(APP).cron $(PREFIX)/etc/upload_$(APP).conf $(PREFIX)/bin/$(APP)_parser.conf
+uploadapp: uploadapp_var usage_tools $(PREFIX)/bin/upload_$(APP).cron $(PREFIX)/etc/upload_$(APP).conf $(PREFIX)/bin/$(APP)_parser.py
 endif
 
 uploadapp_var:
@@ -89,15 +90,20 @@ $(PREFIX)/etc/upload_$(APP).conf:
 	   etc/upload_template.conf.in >$(PREFIX)/etc/upload_$(APP).conf
 	@chmod 644 $(PREFIX)/etc/upload_$(APP).conf
 
-$(PREFIX)/bin/$(APP)_parser.conf:
-	@sed -e "s|%PREFIX%|$(PREFIX)|g" \
-	   bin/$(APP)_parser.py.in >$(PREFIX)/bin/$(APP)_parser.py
-	chmod 755 $(PREFIX)/bin/$(APP)_parser.py
-
-$(PREFIX)/bin/$(APP)_history_parser.conf:
+$(PREFIX)/bin/$(APP)_history_parser.py:
+	@echo "** Generating $(PREFIX)/bin/$(APP)_history_parser.py"
 	@sed -e "s|%PREFIX%|$(PREFIX)|g" \
 	   bin/$(APP)_history_parser.py >$(PREFIX)/bin/$(APP)_history_parser.py
-	chmod 755 $(PREFIX)/bin/$(APP)_history_parser.py
+	@chmod 755 $(PREFIX)/bin/$(APP)_history_parser.py
+
+$(PREFIX)/bin/$(APP)_parser.py:
+	@if [ -a bin/$(APP)_parser.py.in ] ; \
+        then \
+	    echo "** Generating $(PREFIX)/bin/$(APP)_parser.py" ; \
+	    sed -e "s|%PREFIX%|$(PREFIX)|g" \
+	       bin/$(APP)_parser.py.in >$(PREFIX)/bin/$(APP)_parser.py ; \
+	    chmod 755 $(PREFIX)/bin/$(APP)_parser.py ; \
+        fi;
 
 package:
 	@echo "** Building package $(BUILD_BASE)/$(BUNDLE_NAME).tgz"
