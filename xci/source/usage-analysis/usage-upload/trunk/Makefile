@@ -1,4 +1,4 @@
-.PHONY: python-virtualenv uploadapp usage_tools package upload
+.PHONY: python-virtualenv uploadapp upload_APP.cron upload_APP.conf upload_APP.sh usage_tools package upload APP_history_parser.py APP_parser.py
 VER= $(shell cat VERSION)
 REL= $(shell cat RELEASE)
 SHELL= /bin/bash
@@ -56,10 +56,10 @@ $(VENV_BASE)/bin/python:
 
 ifeq ($(APP),glue2)
 CRON_SRC=bin/upload_glue2.cron.in
-uploadapp: uploadapp_var usage_tools $(PREFIX)/bin/upload_$(APP).cron $(PREFIX)/etc/upload_$(APP).conf $(PREFIX)/bin/$(APP)_history_parser.py $(PREFIX)/bin/upload_$(APP).sh
+uploadapp: uploadapp_var usage_tools upload_APP.cron upload_APP.conf APP_history_parser.py upload_APP.sh
 else
 CRON_SRC=bin/upload_template.cron.in
-uploadapp: uploadapp_var usage_tools $(PREFIX)/bin/upload_$(APP).cron $(PREFIX)/etc/upload_$(APP).conf $(PREFIX)/bin/$(APP)_parser.py
+uploadapp: uploadapp_var usage_tools upload_APP.cron upload_APP.conf APP_parser.py
 endif
 
 uploadapp_var:
@@ -69,7 +69,7 @@ usage_tools:
 	@cp -p bin/usage_sync.py $(PREFIX)/bin/usage_sync.py
 	@cp -p bin/usage_splitter.py $(PREFIX)/bin/usage_splitter.py
     
-$(PREFIX)/bin/upload_$(APP).cron:
+upload_APP.cron:
 	@echo "** Generating $(PREFIX)/bin/upload_$(APP).cron"
 	@sed -e "s|%PREFIX%|$(PREFIX)|g" \
 	    -e "s|%PYTHON_PREFIX%|$(PYTHON_PREFIX)|g" \
@@ -78,10 +78,10 @@ $(PREFIX)/bin/upload_$(APP).cron:
 	    $(CRON_SRC) >$(PREFIX)/bin/upload_$(APP).cron
 	@chmod 755 $(PREFIX)/bin/upload_$(APP).cron
 
-$(PREFIX)/bin/upload_$(APP).sh:
+upload_APP.sh:
 	@cp -p bin/upload_$(APP).sh $(PREFIX)/bin/upload_$(APP).sh
 
-$(PREFIX)/etc/upload_$(APP).conf:
+upload_APP.conf:
 	@echo "** Generating $(PREFIX)/etc/upload_$(APP).conf"
 	@sed -e "s|%PREFIX%|$(PREFIX)|g" \
 	    -e "s|%PYTHON_PREFIX%|$(PYTHON_PREFIX)|g" \
@@ -90,13 +90,13 @@ $(PREFIX)/etc/upload_$(APP).conf:
 	   etc/upload_template.conf.in >$(PREFIX)/etc/upload_$(APP).conf
 	@chmod 644 $(PREFIX)/etc/upload_$(APP).conf
 
-$(PREFIX)/bin/$(APP)_history_parser.py:
+APP_history_parser.py:
 	@echo "** Generating $(PREFIX)/bin/$(APP)_history_parser.py"
 	@sed -e "s|%PREFIX%|$(PREFIX)|g" \
 	   bin/$(APP)_history_parser.py >$(PREFIX)/bin/$(APP)_history_parser.py
 	@chmod 755 $(PREFIX)/bin/$(APP)_history_parser.py
 
-$(PREFIX)/bin/$(APP)_parser.py:
+APP_parser.py:
 	@if [ -a bin/$(APP)_parser.py.in ] ; \
         then \
 	    echo "** Generating $(PREFIX)/bin/$(APP)_parser.py" ; \
