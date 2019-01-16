@@ -5,7 +5,7 @@
 
 MY_BASE="%PREFIX%"
 export LD_LIBRARY_PATH="%PYTHON_LIB%"
-. ${MY_BASE}/python/bin/activate
+source ${MY_BASE}/python/bin/activate
 
 ${MY_BASE}/bin/upload_glue2.sh glue2.compute                >>${MY_BASE}/var/glue2.compute.log
 ${MY_BASE}/bin/upload_glue2.sh glue2.applications           >>${MY_BASE}/var/glue2.applications.log

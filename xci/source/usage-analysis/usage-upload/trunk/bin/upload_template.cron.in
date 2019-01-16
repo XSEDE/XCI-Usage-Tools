@@ -2,5 +2,5 @@
 
 MY_BASE="%PREFIX%"
 export LD_LIBRARY_PATH="%PYTHON_LIB%"
-. ${MY_BASE}/python/bin/activate
+source ${MY_BASE}/python/bin/activate
 ${MY_BASE}/bin/upload_usage.py -l info -c ${MY_BASE}/etc/upload_%APP%.conf
