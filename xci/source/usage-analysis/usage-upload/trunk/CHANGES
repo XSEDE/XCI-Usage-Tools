@@ -1,3 +1,4 @@
+1.6-1  Make Makefile much more robust: Make the correcte Python a pre-requisite, configurate Makefile with variables
 1.5-3  Replace ". script" with "source script"
 1.5-2  Fix Makefile so that targets install, uploadapp overwrite previous installs
 1.5-1  Fix cron Python activation

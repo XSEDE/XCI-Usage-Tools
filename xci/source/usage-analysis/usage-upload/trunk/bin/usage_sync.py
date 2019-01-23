@@ -1,4 +1,4 @@
-#!/soft/usage-upload/python/bin/python
+#!%PREFIX%/python/bin/python
 ###############################################################################
 # Moves usage files in one directory to another
 # Skipping files with the same content or with less in the source

@@ -1,18 +1,9 @@
-.PHONY: python-virtualenv uploadapp upload_APP.cron upload_APP.conf upload_APP.sh usage_tools package upload APP_history_parser.py APP_parser.py
+.PHONY: install uploadapp package upload python-virtualenv upload_APP.cron upload_APP.conf upload_APP.sh usage_tools APP_history_parser.py APP_parser.py
 VER= $(shell cat VERSION)
 REL= $(shell cat RELEASE)
 SHELL= /bin/bash
-#----------------------------------------------------
-# CUSTOMIZE THE FOLLOWING VARIABLES
-#
-PREFIX= /soft/usage-upload
-PYTHON_PREFIX= /usr
-PYTHON_LIB= /usr/lib64
-#PYTHON_PREFIX= /Library/Frameworks/Python.framework/Versions/3.6
-#PYTHON_LIB= /Library/Frameworks/Python.framework/Versions/3.6/lib
-#
-# CUSTOMIZE END
-#----------------------------------------------------
+PYTHON ?= python
+PREFIX ?= /usr/local/usage-upload
 
 BUNDLE_NAME= usage-upload-$(VER)-$(REL)
 SOURCE_NAME= usage-upload-$(VER)
@@ -20,6 +11,13 @@ BUILD_BASE= /tmp/usage-upload-build
 BUNDLE_DIR= $(BUILD_BASE)/$(BUNDLE_NAME)
 
 VENV_BASE= $(PREFIX)/python
+
+ifeq (, $(shell which $(PYTHON)))
+$(error "Missing required $(PYTHON)")
+endif
+ifeq (, $(shell which virtualenv))
+$(error "Missing required virtualenv in $(PATH)")
+endif
 
 all: help
 
@@ -31,6 +29,8 @@ help:
 	@echo '  make package'
 	@echo '  make upload'
 	@echo
+	@echo 'Optionally use:'
+	@echo '   make PYTHON=python3 install'
 
 install: python-virtualenv
 	@echo "** Installing usage-upload-$(VER)-$(REL)"
@@ -43,16 +43,17 @@ install: python-virtualenv
 	   bin/upload_usage.py.in >$(PREFIX)/bin/upload_usage.py
 	chmod 755 $(PREFIX)/bin/upload_usage.py
 
-python-virtualenv: $(VENV_BASE)/bin/python
-
-$(VENV_BASE)/bin/python:
+python-virtualenv:
 	@echo "** Initializing Python Virtualenv in $(VENV_BASE)"
-	LD_LIBRARY_PATH=${PYTHON_LIB} $(PYTHON_PREFIX)/bin/virtualenv $(VENV_BASE)
-	( export LD_LIBRARY_PATH=${PYTHON_LIB} ; \
-	    source $(VENV_BASE)/bin/activate ; \
-        pip --no-cache-dir install --upgrade pip; \
-	    pip --no-cache-dir install paramiko; \
-	    pip --no-cache-dir install pytz )
+	virtualenv $(VENV_BASE)
+	( source $(VENV_BASE)/bin/activate ; \
+	    $(VENV_BASE)/bin/pip --disable-pip-version-check install --upgrade pip )
+	( source $(VENV_BASE)/bin/activate ; \
+	    $(VENV_BASE)/bin/pip install numpy )
+	( source $(VENV_BASE)/bin/activate ; \
+	    $(VENV_BASE)/bin/pip install paramiko )
+	( source $(VENV_BASE)/bin/activate ; \
+	    $(VENV_BASE)/bin/pip install pytz )
 
 ifeq ($(APP),glue2)
 CRON_SRC=bin/upload_glue2.cron.in
@@ -72,10 +73,10 @@ usage_tools:
 upload_APP.cron:
 	@echo "** Generating $(PREFIX)/bin/upload_$(APP).cron"
 	@sed -e "s|%PREFIX%|$(PREFIX)|g" \
-	    -e "s|%PYTHON_PREFIX%|$(PYTHON_PREFIX)|g" \
-	    -e "s|%PYTHON_LIB%|$(PYTHON_LIB)|g" \
-	    -e "s|%APP%|$(APP)|g" \
-	    $(CRON_SRC) >$(PREFIX)/bin/upload_$(APP).cron
+ 	     -e "s|%LD_LIBRARY_PATH%|$(LD_LIBRARY_PATH)|g" \
+	     -e "s|%APP%|$(APP)|g" \
+	     -e "s|%PYTHON%|$(PYTHON)|g" \
+	     $(CRON_SRC) >$(PREFIX)/bin/upload_$(APP).cron
 	@chmod 755 $(PREFIX)/bin/upload_$(APP).cron
 
 upload_APP.sh:
@@ -84,15 +85,16 @@ upload_APP.sh:
 upload_APP.conf:
 	@echo "** Generating $(PREFIX)/etc/upload_$(APP).conf"
 	@sed -e "s|%PREFIX%|$(PREFIX)|g" \
-	    -e "s|%PYTHON_PREFIX%|$(PYTHON_PREFIX)|g" \
-	    -e "s|%PYTHON_LIB%|$(PYTHON_LIB)|g" \
-	    -e "s|%APP%|$(APP)|g" \
+	     -e "s|%LD_LIBRARY_PATH%|$(LD_LIBRARY_PATH)|g" \
+	     -e "s|%APP%|$(APP)|g" \
+	     -e "s|%PYTHON%|$(PYTHON)|g" \
 	   etc/upload_template.conf.in >$(PREFIX)/etc/upload_$(APP).conf
 	@chmod 644 $(PREFIX)/etc/upload_$(APP).conf
 
 APP_history_parser.py:
 	@echo "** Generating $(PREFIX)/bin/$(APP)_history_parser.py"
 	@sed -e "s|%PREFIX%|$(PREFIX)|g" \
+	     -e "s|%PYTHON%|$(PYTHON)|g" \
 	   bin/$(APP)_history_parser.py >$(PREFIX)/bin/$(APP)_history_parser.py
 	@chmod 755 $(PREFIX)/bin/$(APP)_history_parser.py
 
@@ -101,6 +103,7 @@ APP_parser.py:
         then \
 	    echo "** Generating $(PREFIX)/bin/$(APP)_parser.py" ; \
 	    sed -e "s|%PREFIX%|$(PREFIX)|g" \
+	        -e "s|%PYTHON%|$(PYTHON)|g" \
 	       bin/$(APP)_parser.py.in >$(PREFIX)/bin/$(APP)_parser.py ; \
 	    chmod 755 $(PREFIX)/bin/$(APP)_parser.py ; \
         fi;
