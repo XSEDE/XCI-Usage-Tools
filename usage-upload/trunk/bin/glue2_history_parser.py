@@ -1,4 +1,4 @@
-#!/soft/usage-upload/python/bin/python
+#!%PREFIX%/python/bin/python
 ###############################################################################
 # Parse a glue2 history usage file and return standard usage in CSV
 # Usage:  ./<script> [<input_file>]

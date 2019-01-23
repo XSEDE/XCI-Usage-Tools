@@ -1,4 +1,4 @@
-#!/soft/usage-upload/python/bin/python
+#!%PREFIX%/python/bin/python
 ###############################################################################
 # Parse a usage file and split it into daily files
 # Usage:  ./<script> [<input_file>]

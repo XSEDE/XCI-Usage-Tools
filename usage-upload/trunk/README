@@ -6,67 +6,66 @@
 #
 # Pre-requisites
 #
- a) Any Python 2.7 or 3.x plus Python virtualenv
-    On CentOS/RedHat 7.x install RPMs:
+
+ a) Any Python 2.7 or 3.x that includes Python virtualenv
+    On CentOS/RedHat 7.x install these RPMs:
       python-2.7.5 and python-virtualenv
         OR
       python34-3.4.9 and python34-virtualenv
 
-    Use the path to this Python to configuring the Makefile below
+    Or use another Python that is in your path.
+
+    Verify that that the first Python in your path is usable using these commands:
+      python -c "import virtualenv"
+        OR with Python 3.x
+      python3 -c "import virtualenv"
 
  b) Usage files containing log entries or pre-parsed XSEDE standard usage records,
     which are rotated and have names that include a date "YYYYMMDD", for example:
        messages-20181201.log
 
+
 ###############################################################################
 #
 # Installing usage-upload
-# These instructions use a default install PREFIX=/usr/local/usage-upload
-# If you choose an alternate PREFIX, adjust these instructions accordingly
+#   These instructions use a default install PREFIX=/usr/local/usage-upload
+#   To use an alternate PREFIX adjust step 1) below
 #
 
 1) Always define the install directory PREFIX before executing these instructions
-     If using sh/bash
+  #  If using sh or bash
   $ export PREFIX=/usr/local/usage-upload
-     if using csh/tcsh
+  #  If using csh or tcsh
   $ setenv PREFIX /usr/local/usage-upload
 
   $ mkdir $PREFIX
-   
-#
+
 2) Install
   $ mkdir $PREFIX/downloads/
   $ cd $PREFIX/downloads/
 
   ## Browse https://software.xsede.org/development/usage-analysis/
-  ##   and note the most recent VERSION and RELEASE of this software
-  ## For example for usage-upload-1.4-1.README and usage-upload-1.4-1.tgz
-  ##   have VERSION=1.4 and RELEASE=1
+  ##   and note the most recent usage-upload-<VERSION>-<RELEASE>.README and .tgz files
+  ## For example usage-upload-1.6-1.README and usage-upload-1.6-1.tgz
 
   $ wget https://software.xsede.org/development/usage-analysis/usage-upload-<VERSION>-<RELEASE>.tgz
   $ tar -xzf usage-upload-<VERSION>-<RELEASE>.tgz
   $ cd usage-upload-<VERSION>-<RELEASE>/
 
-  # Edit the Makefile to set the following variables 
-    Set PREFIX to the value you used in step 1) above
-      For example PREFIX=/usr/local/usage-upload
-    Set PYTHON_PREFIX to the base directory of the Python with virtualenv
-      Usually the parent directory where bin/python is found
-      For example given /usr/bin/python set PYTHON_PREFIX=/usr
-    Set PYTHON_LIB to the library sub-directory of your Python 
-      This is usually the lib/ sub-directory of PYTHON_PREFIX
-
+  # Make sure the first Python in your environment satisfies the pre-requisites in a) above
   $ make install
+  #   OR to use Python 3
+  $ make PYTHON=python3 install
 
 3) Generate an SSH key pay without a passpharse to be used to upload files
   $ ssh-keygen -t rsa -f $PREFIX/etc/id_rsa
 
+
 ###############################################################################
 #
 # The usage-upload software can be used to upload usage for multiple applications.
-# The following steps can be repeated for each application using different values
-#   of <MYAPP>
-# Make use the PREFIX to the usage-upload software is defined as shows in 1) above
+# Repeat the following steps settting <MYAPP> to a unique value for each application
+# Make sure the PREFIX environment variable is defined as shows in 1) above
 # Use the same ssh key pair to upload usage for all applications on a given server
 #   
 
@@ -85,6 +84,8 @@
   # First go to the downloaded source directory
   $ cd $PREFIX/download/usage-upload-<VERSION>-<RELEASE>/
   $ make APP=<MYAPP> uploadapp
+  #   OR to use Python 3
+  $ make PYTHON=python3 APP=<MYAPP> uploadapp
 
 6) Edit the $PREFIX/etc/upload_<MYAPP>.conf to set the following variables
    LOCAL_DIRECTORY -> where the usage files are located
@@ -101,12 +102,14 @@
   # Use appropriate values of <PREFIX> and <MYAPP>
   CRON: 10 6 * * 0 <PREFIX>/bin/upload_<MYAPP>.cron
 
+
 ###############################################################################
 #
 # Detailed usage-upload execution flow description
 #
 # This is background material and not part of the installation instructions.
 #
+
   1. Processing started by cron or  interactive execution of
      bin/upload_<MYAPP>.cron
   2. Which executes bin/upload_usage.py with the the configuration file
