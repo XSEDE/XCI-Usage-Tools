@@ -20,8 +20,9 @@
         OR with Python 3.x
       python3 -c "import virtualenv"
 
- b) Usage files containing log entries or pre-parsed XSEDE standard usage records,
-    which are rotated and have names that include a date "YYYYMMDD", for example:
+ b) Usage files must contain log entries or pre-parsed XSEDE standard usage records,
+    should be rotated daily or weekly, and must have names with a date "YYYYMMDD",
+    for example:
        messages-20181201.log
 
 
@@ -32,9 +33,10 @@
 #   To use an alternate PREFIX adjust step 1) below
 #
 
-1) Always define the install directory PREFIX before executing these instructions
+1) Define the install directory PREFIX before executing these instructions
   #  If using sh or bash
   $ export PREFIX=/usr/local/usage-upload
+
   #  If using csh or tcsh
   $ setenv PREFIX /usr/local/usage-upload
 
@@ -57,7 +59,7 @@
   #   OR to use Python 3
   $ make PYTHON=python3 install
 
-3) Generate an SSH key pay without a passpharse to be used to upload files
+3) Generate an SSH key pair without a passpharse to be used to upload files
   $ ssh-keygen -t rsa -f $PREFIX/etc/id_rsa
 
 
@@ -72,15 +74,15 @@
 4) Request access to upload usage files to the Usage Collection Service (xci-usage.xsede.org)
 
    # E-mail help@xsede.org with the "Subject: XCI usage upload access" and this information:
-   a. Attach the generated public key file id_rsa.pub, or include the contents of the file in the e-mail
+   a. Attach the generated public key file id_rsa.pub, or past its contents in the e-mail body
    b. Include the name of the application <MYAPP> (i.e. cilogin, ssohub, ...) the usage data is from
    c. Include the hostname(s) you will be uploading usage data from
 
   # Usage Collection Service administrators will reply with instructions that include:
-   d. The ssh target account to upload usage files to
-   e. The subdirectory to oupload usage files to
+   d. The ssh remote username (REMOTE_USERNAME) to upload usage files to
+   e. The ssh remote subdirectory (REMOTE_PATH) to oupload usage files to
 
-5) Initialize an application upload process
+5) Initialize an application upload process by providing a unique name for <MYAPP> below
   # First go to the downloaded source directory
   $ cd $PREFIX/download/usage-upload-<VERSION>-<RELEASE>/
   $ make APP=<MYAPP> uploadapp
@@ -89,11 +91,13 @@
 
 6) Edit the $PREFIX/etc/upload_<MYAPP>.conf to set the following variables
    LOCAL_DIRECTORY -> where the usage files are located
-   LOCAL_GLOB -> the shell glob of which rotated usage files need to be uploaded
-   REMOTE_USERNAME -> the ssh target account you received in step 4) above
-   REMOTE_PATH -> the subdirectory you received in step 4) above
+   LOCAL_GLOB -> the shell glob for finding rotated usage files to upload in LOCAL_DIRECTORY
+   REMOTE_USERNAME -> the ssh remote username you received in step 4) above
+   REMOTE_PATH -> the ssh remote subdirectory you received in step 4) above
        Usually "<MYAPP>/", for example "ssohob/"
-   Optionally LOG_PARSER if you have a parser that produces stardard usage records
+   Optionally set LOG_PARSER if you have a parser that produces stardard usage records
+       or rename "LOG_PARSER" to "LOG_PARSER_disabled" if you don't have a log parser
+   Optionally set LOG_STDERR to "true" if you want error messsages also printed to STDERR
 
 7) Test the new custom upload appplication
   $ $PREFIX/bin/upload_<MYAPP>.cron
@@ -107,10 +111,10 @@
 #
 # Detailed usage-upload execution flow description
 #
-# This is background material and not part of the installation instructions.
+# This is background material and not part of the installation instructions
 #
 
-  1. Processing started by cron or  interactive execution of
+  1. Processing started by cron or interactive execution of
      bin/upload_<MYAPP>.cron
   2. Which executes bin/upload_usage.py with the the configuration file
      etc/upload_<MYAPP>.conf
