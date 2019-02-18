@@ -6,7 +6,8 @@
  "LOG_PARSER": "%PREFIX%/bin/<LOG_PARSER>",
  "REMOTE_HOSTNAME": "xci-metrics.xsede.org",
  "REMOTE_PORT": 22,
- "REMOTE_USERNAME": "<UPLOAD_ACCOUNT>",
- "REMOTE_PATH": "<UPLOAD_DIRECTORY>/",
- "LOG_FILE": "%PREFIX%/var/upload_%APP%.log"
+ "REMOTE_USERNAME": "<REMOTE_ACCOUNT>",
+ "REMOTE_PATH": "<REMOTE_DIRECTORY>/",
+ "LOG_FILE": "%PREFIX%/var/upload_%APP%.log",
+ "LOG_STDERR": false
 }

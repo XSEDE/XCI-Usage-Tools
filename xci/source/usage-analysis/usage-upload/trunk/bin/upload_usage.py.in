@@ -70,6 +70,10 @@ class HandleUpload():
                                                                  backupCount=999, utc=True)
         self.handler.setFormatter(self.formatter)
         self.logger.addHandler(self.handler)
+        if self.config.get('LOG_STDERR', false) is true:
+            self.handler2 = logging.handlers.StreamHandler(sys.stderr)
+            self.handler2.setFormatter(self.formatter)
+            self.logger.addHandler(self.handler2)
 
         for c in ['LOCAL_DIRECTORY', 'LOCAL_GLOB', 'UPLOAD_STATUS_FILE', 'RSA_KEY', 'REMOTE_HOSTNAME', 'REMOTE_USERNAME']:
             if not self.config.get(c, None):
@@ -222,8 +226,13 @@ class HandleUpload():
         except IOError:
             self.logger.error('Failed to write config=' + self.config['UPLOAD_STATUS_FILE'])
             sys.exit(1)
+        if self.stats['errors'] > 0:
+            return(1)
+        else:
+            return(0)
 
 if __name__ == '__main__':
     task = HandleUpload()
     rc = task.upload_directory(task.config.get('LOCAL_DIRECTORY'), task.config.get('LOCAL_GLOB'))
     rc = task.finish()
+    exit(rc)
