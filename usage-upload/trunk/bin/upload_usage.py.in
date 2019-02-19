@@ -70,7 +70,7 @@ class HandleUpload():
                                                                  backupCount=999, utc=True)
         self.handler.setFormatter(self.formatter)
         self.logger.addHandler(self.handler)
-        if self.config.get('LOG_STDERR', false) is true:
+        if self.config.get('LOG_STDERR', False) is True:
             self.handler2 = logging.handlers.StreamHandler(sys.stderr)
             self.handler2.setFormatter(self.formatter)
             self.logger.addHandler(self.handler2)
