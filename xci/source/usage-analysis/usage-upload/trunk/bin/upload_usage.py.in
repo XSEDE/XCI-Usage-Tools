@@ -70,14 +70,10 @@ class HandleUpload():
                                                                  backupCount=999, utc=True)
         self.handler.setFormatter(self.formatter)
         self.logger.addHandler(self.handler)
-        if self.config.get('LOG_STDERR', False) is True:
-            self.handler2 = logging.handlers.StreamHandler(sys.stderr)
-            self.handler2.setFormatter(self.formatter)
-            self.logger.addHandler(self.handler2)
 
         for c in ['LOCAL_DIRECTORY', 'LOCAL_GLOB', 'UPLOAD_STATUS_FILE', 'RSA_KEY', 'REMOTE_HOSTNAME', 'REMOTE_USERNAME']:
             if not self.config.get(c, None):
-                self.logger.error('Missing config "{}"'.format(c))
+                self.log_error('Missing config "{}"'.format(c))
                 sys.exit(1)
 
         # Upload history/state
@@ -95,6 +91,11 @@ class HandleUpload():
             'bytes': 0
         }
 
+    def log_error(self, message):
+        self.logger.error(message)
+        if self.config.get('LOG_STDERR', False) is True:
+            sys.stderr.write(message + "\n")
+
     def upload_directory(self, log_path, log_glob):
         start_utc = datetime.now(utc)
         self.logger.info('Processing {}/{}'.format(log_path, log_glob))
@@ -106,7 +107,7 @@ class HandleUpload():
         try:
             rsakey = paramiko.RSAKey.from_private_key_file(self.config.get('RSA_KEY'))
         except Exception as e:
-            self.logger.error('Exception "{}" loading RSA private key {}'.format(e, self.config.get('RSA_KEY')))
+            self.log_error('Exception "{}" loading RSA private key {}'.format(e, self.config.get('RSA_KEY')))
             sys.exit(1)
         
         ssh_client = paramiko.SSHClient()
@@ -117,13 +118,13 @@ class HandleUpload():
                 username=self.config.get('REMOTE_USERNAME'),
                 pkey=rsakey)
         except Exception as e:
-            self.logger.error('ssh_client_connect error: {}'.format(e))
+            self.log_error('ssh_client_connect error: {}'.format(e))
             sys.exit(1)
 
         try:
             self.scp_client = ssh_client.open_sftp()
         except Exception as e:
-            self.logger.error('ssh_client.open_sftp() error: {}'.format(e))
+            self.log_error('ssh_client.open_sftp() error: {}'.format(e))
             sys.exit(1)
 
         for f in matching_files:
@@ -132,7 +133,7 @@ class HandleUpload():
         try:
             self.scp_client.close()
         except Exception as e:
-            self.logger.error('scp_client.close() error: {}'.format(e))
+            self.log_error('scp_client.close() error: {}'.format(e))
             sys.exit(1)
 
         end_utc = datetime.now(utc)
@@ -189,7 +190,7 @@ class HandleUpload():
                     remote_filename = local_filename + '.usage.csv.gz'
 #           except subprocess.CalledProcessError as e:
             except Exception as e:
-                self.logger.error('Parsing step failed: {}'.format(e))
+                self.log_error('Parsing step failed: {}'.format(e))
                 self.stats['skipped'] += 1
                 return
         else:
@@ -214,7 +215,7 @@ class HandleUpload():
         except Exception as e:
             my_status['upload_rc'] = str(e)
             self.stats['errors'] += 1
-            self.logger.error('scp_client.put "{}" failed: {}'.format(remote_filename, e))
+            self.log_error('scp_client.put "{}" failed: {}'.format(remote_filename, e))
 
         self.UPLOAD_STATUS[local_fqn] = my_status
 
@@ -224,7 +225,7 @@ class HandleUpload():
                 json.dump(self.UPLOAD_STATUS, file, indent=4, sort_keys=True)
                 file.close()
         except IOError:
-            self.logger.error('Failed to write config=' + self.config['UPLOAD_STATUS_FILE'])
+            self.log_error('Failed to write config=' + self.config['UPLOAD_STATUS_FILE'])
             sys.exit(1)
         if self.stats['errors'] > 0:
             return(1)
