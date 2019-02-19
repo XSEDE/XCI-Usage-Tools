@@ -76,8 +76,9 @@ upload_APP.cron:
  	     -e "s|%LD_LIBRARY_PATH%|$(LD_LIBRARY_PATH)|g" \
 	     -e "s|%APP%|$(APP)|g" \
 	     -e "s|%PYTHON%|$(PYTHON)|g" \
-	     $(CRON_SRC) >$(PREFIX)/bin/upload_$(APP).cron
-	@chmod 755 $(PREFIX)/bin/upload_$(APP).cron
+	     $(CRON_SRC) >$(PREFIX)/bin/upload_$(APP).cron.new
+	@chmod 755 $(PREFIX)/bin/upload_$(APP).cron.new
+	@cp -p --backup=numbered $(PREFIX)/bin/upload_$(APP).cron.new $(PREFIX)/bin/upload_$(APP).cron
 
 upload_APP.sh:
 	@cp -p bin/upload_$(APP).sh $(PREFIX)/bin/upload_$(APP).sh
@@ -88,8 +89,9 @@ upload_APP.conf:
 	     -e "s|%LD_LIBRARY_PATH%|$(LD_LIBRARY_PATH)|g" \
 	     -e "s|%APP%|$(APP)|g" \
 	     -e "s|%PYTHON%|$(PYTHON)|g" \
-	   etc/upload_template.conf.in >$(PREFIX)/etc/upload_$(APP).conf
-	@chmod 644 $(PREFIX)/etc/upload_$(APP).conf
+	   etc/upload_template.conf.in >$(PREFIX)/etc/upload_$(APP).conf.new
+	@chmod 644 $(PREFIX)/etc/upload_$(APP).conf.new
+	@cp -p --backup=numbered $(PREFIX)/etc/upload_$(APP).conf.new $(PREFIX)/etc/upload_$(APP).conf
 
 APP_history_parser.py:
 	@echo "** Generating $(PREFIX)/bin/$(APP)_history_parser.py"
@@ -117,7 +119,10 @@ package:
 	cp -p bin/* $(BUNDLE_DIR)/bin/
 	@mkdir $(BUNDLE_DIR)/etc
 	cp -p etc/* $(BUNDLE_DIR)/etc/
-	cp -p VERSION RELEASE README Makefile $(BUNDLE_DIR)/
+	cp -p VERSION RELEASE Makefile $(BUNDLE_DIR)/
+	sed -e "s|%VER%|$(VER)|g" \
+	    -e "s|%REL%|$(REL)|g" \
+       README.in >$(BUNDLE_DIR)/README
 	tar -C $(BUILD_BASE) -czf $(BUILD_BASE)/$(BUNDLE_NAME).tgz $(BUNDLE_NAME)/
 
 upload:

@@ -1,6 +1,9 @@
 ###############################################################################
 #
-# usage-upload deployment instructions
+# Deployment instructions for usage-upload-%VER%-%REL%
+#
+# Other versions and their instructions are available at:
+#   https://software.xsede.org/development/usage-analysis/
 #
 ###############################################################################
 #
@@ -28,9 +31,8 @@
 
 ###############################################################################
 #
-# Installing usage-upload
-#   These instructions use a default install PREFIX=/usr/local/usage-upload
-#   To use an alternate PREFIX adjust step 1) below
+# Installation steps
+#   Change the value of PREFIX in step 1) to install to an alternate directory
 #
 
 1) Define the install directory PREFIX before executing these instructions
@@ -43,23 +45,20 @@
   $ mkdir $PREFIX
 
 2) Install
-  $ mkdir $PREFIX/downloads/
-  $ cd $PREFIX/downloads/
+  $ mkdir $PREFIX/source/
+  $ cd $PREFIX/source/
 
-  ## Browse https://software.xsede.org/development/usage-analysis/
-  ##   and note the most recent usage-upload-<VERSION>-<RELEASE>.README and .tgz files
-  ## For example usage-upload-1.6-1.README and usage-upload-1.6-1.tgz
-
-  $ wget https://software.xsede.org/development/usage-analysis/usage-upload-<VERSION>-<RELEASE>.tgz
-  $ tar -xzf usage-upload-<VERSION>-<RELEASE>.tgz
-  $ cd usage-upload-<VERSION>-<RELEASE>/
+  $ wget https://software.xsede.org/development/usage-analysis/usage-upload-%VER%-%REL%.tgz
+  $ tar -xzf usage-upload-%VER%-%REL%.tgz
+  $ cd usage-upload-%VER%-%REL%
 
   # Make sure the first Python in your environment satisfies the pre-requisites in a) above
   $ make install
-  #   OR to use Python 3
+  #   OR if using Python 3
   $ make PYTHON=python3 install
 
 3) Generate an SSH key pair without a passpharse to be used to upload files
+  # If you are upgrading you can use a previously generated SSH key pair
   $ ssh-keygen -t rsa -f $PREFIX/etc/id_rsa
 
 
@@ -83,13 +82,14 @@
    e. The ssh remote subdirectory (REMOTE_PATH) to oupload usage files to
 
 5) Initialize an application upload process by providing a unique name for <MYAPP> below
-  # First go to the downloaded source directory
-  $ cd $PREFIX/download/usage-upload-<VERSION>-<RELEASE>/
+  # First go to the source directory
+  $ cd $PREFIX/source/usage-upload-%VER%-%REL%/
   $ make APP=<MYAPP> uploadapp
   #   OR to use Python 3
   $ make PYTHON=python3 APP=<MYAPP> uploadapp
 
 6) Edit the $PREFIX/etc/upload_<MYAPP>.conf to set the following variables
+   # If you are upgrading reference the saved previous configuration files
    LOCAL_DIRECTORY -> where the usage files are located
    LOCAL_GLOB -> the shell glob for finding rotated usage files to upload in LOCAL_DIRECTORY
    REMOTE_USERNAME -> the ssh remote username you received in step 4) above
