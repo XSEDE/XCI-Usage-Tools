@@ -1,3 +1,4 @@
+1.7-3  Fixed Makefile sync and splitter tools PREFIX not configured when installed
 1.7-2  Changed download directory to source/; make README version specific; add some upgrade instructions
 1.7-1  Improve the readme, implement LOG_STDERR config, return a meaningful return code
 1.6-1  Make Makefile much more robust: Make the correcte Python a pre-requisite, configurate Makefile with variables
