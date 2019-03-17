@@ -67,8 +67,11 @@ uploadapp_var:
 	$(if $(APP),, $(error APP variable not set))
 
 usage_tools:
-	@cp -p bin/usage_sync.py $(PREFIX)/bin/usage_sync.py
-	@cp -p bin/usage_splitter.py $(PREFIX)/bin/usage_splitter.py
+	@echo "** Generating bin tools"
+	@sed -e "s|%PREFIX%|$(PREFIX)|g" \
+	   bin/usage_sync.py.in >$(PREFIX)/bin/usage_sync.py
+	@sed -e "s|%PREFIX%|$(PREFIX)|g" \
+	   bin/usage_splitter.py.in >$(PREFIX)/bin/usage_splitter.py
     
 upload_APP.cron:
 	@echo "** Generating $(PREFIX)/bin/upload_$(APP).cron"
