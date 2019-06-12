@@ -1,6 +1,6 @@
 {
  "LOCAL_DIRECTORY": "<USAGE_FILE_DIRECTORY>",
- "LOCAL_GLOB": "<USAGE_GLOB>-20[0-9][0-9][0-9][0-9][0-9][0-9]*",
+ "LOCAL_GLOB": "<USAGE_GLOB>",
  "UPLOAD_STATUS_FILE": "%PREFIX%/etc/upload_%APP%_status.json",
  "RSA_KEY": "%PREFIX%/etc/id_rsa",
  "LOG_PARSER": "%PREFIX%/bin/<LOG_PARSER>",
