@@ -1,4 +1,4 @@
-#!/soft/usage-process-python/bin/python
+#!/soft/metrics-tools/venv-1.0/bin/python
 
 from __future__ import print_function
 import argparse
@@ -8,12 +8,15 @@ import gzip
 import json
 import os
 import re
-import socket
+#import socket, struct
 import sys
 import pdb
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
+
+def ip_to_u32(ip):
+  return int(''.join('%02x' % int(d) for d in ip.split('.')), 16)
 
 class Filter():
     def __init__(self):
@@ -58,6 +61,20 @@ class Filter():
         except Exception as e:
             eprint('ERROR loading map={}, initializing'.format(self.CLIENT_FILTER_FILE))
             self.CLIENT_FILTER = {}
+
+        # Convert client filters into networks
+        self.CLIENT_NETS = {}
+        for cidr in self.CLIENT_FILTER:
+            if '/' in cidr:
+                netstr, bits = cidr.split('/')
+                mask = (0xffffffff << (32 - int(bits))) & 0xffffffff
+                net = ip_to_u32(netstr) & mask
+                self.CLIENT_NETS[cidr] = (mask, net)
+#           else:
+#               mask = 0xffffffff
+#               net = ip_to_u32(cidr)
+#           self.CLIENT_NETS[cidr] = (mask, net)
+
 #       eprint('Loaded {}/USER_FILTER {}/CLIENT_FILTER entries'.format(len(self.USER_FILTER), len(self.CLIENT_FILTER)))
 
     def filter_file(self, file_name):
@@ -82,9 +99,9 @@ class Filter():
         csv_writer = csv.DictWriter(sys.stdout, fieldnames=csv_reader._fieldnames, delimiter=',', quotechar='|')
         csv_writer.writeheader()
         while row:
-            row1 = self.filter_action(row, 'USE_USER', self.USER_FILTER)
+            row1 = self.filter_action_simple(row, 'USE_USER', self.USER_FILTER)
             if row1:
-                row2 = self.filter_action(row1, 'USE_CLIENT', self.CLIENT_FILTER)
+                row2 = self.filter_action_subnet(row1, 'USE_CLIENT', self.CLIENT_FILTER)
                 if row2:
                     csv_writer.writerow(row2)
             try:
@@ -94,7 +111,10 @@ class Filter():
 
         fd.close()
 
-    def filter_action(self, row, field, filter_rules):
+    ##########################################################################
+    # Simple filter based on exact field match
+    ##########################################################################
+    def filter_action_simple(self, row, field, filter_rules):
         try:
             action = filter_rules[row[field]]
             action_fields = action.split(':', 1)        # Actions are "DELETE", "MAP:<replacement_value>"
@@ -105,6 +125,38 @@ class Filter():
                 row[field] = action_fields[1]
         except:
             pass
+        return(row)
+
+    ##########################################################################
+    # Complex subnet <subnet>/<bits> field match
+    ##########################################################################
+    def filter_action_subnet(self, row, field, filter_rules):
+        try:
+            action = filter_rules[row[field]]
+            action_fields = action.split(':', 1)        # Actions are "DELETE", "MAP:<replacement_value>"
+            command = action_fields[0].lower()
+            if command == 'delete':
+                return(None)  
+            if command == 'map':
+                row[field] = action_fields[1]
+            return(row)
+        except:
+            pass
+        # In Python3
+        #ip = ipaddress.IPv4Address(row[field])
+        # In Python2
+        ip = ip_to_u32(row[field])
+        for rule, network in self.CLIENT_NETS.iteritems():
+            mask, net = network
+            if ip & mask == net:
+               action = self.CLIENT_FILTER[rule]
+               action_fields = action.split(':', 1)        # Actions are "DELETE", "MAP:<replacement_value>"
+               command = action_fields[0].lower()
+               if command == 'delete':
+                   return(None)  
+               if command == 'map':
+                   row[field] = action_fields[1]
+               return(row)
         return(row)
 
     def finish(self):

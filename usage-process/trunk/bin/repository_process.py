@@ -128,7 +128,10 @@ class RepositoryProcess():
     	this_history = self.file_status.get(file_fqn, {})
         input_stat = os.stat(file_fqn)
         input_mtime_str = str(datetime.fromtimestamp(input_stat.st_mtime))
-        out_file_fqn = os.path.join(self.TARGET_DIR, file_name[:-3] + self.TARGET_EXTENSION + '.gz')
+        newext = getattr(self, 'TARGET_EXTENSION')
+        if not newext:
+            newext = ''
+        out_file_fqn = os.path.join(self.TARGET_DIR, file_name[:-3] + newext + '.gz')
         if input_stat.st_size == this_history.get('in_size', None) and input_mtime_str == this_history.get('in_mtime', None) \
                 and os.path.isfile(out_file_fqn):
             self.stats['skipped'] += 1
