@@ -1,3 +1,4 @@
+1.8-1  Enhance rsp_apache_parser.py.in to handle drupal logged user identity field
 1.7-4  Add new rsp_apache_parser.py.in and upload_rsp_apache.conf
 1.7-3  Fixed Makefile sync and splitter tools PREFIX not configured when installed
 1.7-2  Changed download directory to source/; make README version specific; add some upgrade instructions
