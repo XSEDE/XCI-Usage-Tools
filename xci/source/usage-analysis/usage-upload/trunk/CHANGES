@@ -1,3 +1,4 @@
+1.8-3  Fix file glob
 1.8-2  Fix drupal username parsing to produce xsede:<xsede_username> usage entries
 1.8-1  Enhance rsp_apache_parser.py.in to handle drupal logged user identity field
 1.7-4  Add new rsp_apache_parser.py.in and upload_rsp_apache.conf
