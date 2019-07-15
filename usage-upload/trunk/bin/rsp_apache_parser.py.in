@@ -59,7 +59,10 @@ if __name__ == '__main__':
         o['USE_CLIENT']             = match.group('ip')
 
         if match.group('drupal_username') and match.group('drupal_username') != '-':
-            o['USE_USER']           = 'other:' + match.group('drupal_username')
+            if match.group('drupal_username').endswith('@xsede.org')
+                o['USE_USER']       = 'xsede:' + match.group('drupal_username')[0:-10]
+            else:
+                o['USE_USER']       = 'other:' + match.group('drupal_username')
         elif match.group('user') == '-':
             o['USE_USER']           = None
         elif match.group('user').endswith('@TERAGRID.ORG'):
