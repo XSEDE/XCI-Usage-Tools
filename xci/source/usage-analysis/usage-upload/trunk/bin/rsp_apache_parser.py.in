@@ -19,7 +19,7 @@ import re
 #==== CUSTOMIZATION VARIABLES ====================
 
 # Parsing regular expression
-LOG_REGEX = '(?P<ip>[(\d\.)]+) - (?P<user>\S+) \[(?P<date>.*?)\] "(?P<method>\w+) (?P<request_path>.*?) HTTP/(?P<http_version>.*?)" (?P<status_code>\d+) (?P<response_size>.*?)( "(?P<referrer>.*?)" "(?P<user_agent>.*?)")?'
+LOG_REGEX = '(?P<ip>[(\d\.)]+) - (?P<user>\S+) \[(?P<date>.*?)\] "(?P<method>\w+) (?P<request_path>.*?) HTTP/(?P<http_version>.*?)" (?P<status_code>\d+) (?P<response_size>\S+?)( "(?P<referrer>.*?)" "(?P<user_agent>.*?)" "(?P<drupal_username>.*?)")?'
 compiled = re.compile(LOG_REGEX)
 
 #==== END OF CUSTOMIZATIONS ====================
@@ -58,7 +58,9 @@ if __name__ == '__main__':
 
         o['USE_CLIENT']             = match.group('ip')
 
-        if match.group('user') == '-':
+        if match.group('drupal_username') and match.group('drupal_username') != '-':
+            o['USE_USER']           = 'other:' + match.group('drupal_username')
+        elif match.group('user') == '-':
             o['USE_USER']           = None
         elif match.group('user').endswith('@TERAGRID.ORG'):
             o['USE_USER']           = 'xsede:' + match.group('user')[0:-13]
