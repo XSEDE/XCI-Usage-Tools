@@ -37,6 +37,9 @@ def is_gz_file(filepath):
     with open(filepath, 'rb') as test_f:
         return binascii.hexlify(test_f.read(2)) == b'1f8b'
 
+#
+# Returns: equal, different, or subset (when filename2 contains the leading subset of what is in filename1)
+#
 def file_compare(filename1, filename2):
     if filename1[-3:] == '.gz':
         fh1 = gzip.open(filename1, mode='rb')
@@ -51,9 +54,11 @@ def file_compare(filename1, filename2):
         buff1 = fh1.read(1024*1024)
         buff2 = fh2.read(1024*1024)
         if not buff1 and not buff2:
-            result = True
-        if buff1 != buff2:
-            result = False
+            result = 'equal'
+        elif len(buff2) < len(buff1) and buff2 == buff1[:len(buff2)]:
+            result = 'subset'
+        elif buff1 != buff2:
+            result = 'different'
     fh1.close()
     fh2.close()
     return(result)
@@ -131,11 +136,13 @@ class ProcessMoves():
         if not os.path.isdir(dest_path):
             self.logger.error('Move destination is not a directory: ' + dest_path)
             return
-        self.logger.debug('Start moving from={} to={}'.format(source_path, dest_path))
+        dest_file_prefix = moveitem.get('destination_file_prefix', '')
+        self.logger.debug('Start moving from={} to={}, target_prefix={}'.format(source_path, dest_path, dest_file_prefix))
 
      	move_filenames = [f for f in os.listdir(source_path) if os.path.isfile(os.path.join(source_path, f))]
-        for filename in move_filenames:
-            rc = self.move_one_file(os.path.join(source_path, filename), os.path.join(dest_path, filename))
+        for source_filename in move_filenames:
+            dest_filename = dest_file_prefix + source_filename
+            rc = self.move_one_file(os.path.join(source_path, source_filename), os.path.join(dest_path, dest_filename))
         end_ts = datetime.now(utc)
         end_moves = self.stats['moves']
         self.logger.debug('Done  moving from={} files={} elapsed={}/seconds'.format(source_path, end_moves - start_moves, round((end_ts - start_ts).total_seconds(), 3)))
@@ -147,13 +154,15 @@ class ProcessMoves():
             self.stats['errors'] += 1
             return
         if not input_gz:
-            output_fqn += '.gz'                     # Gzip output if input isn't gzip'ed
+            output_fqn += '.gz'                         # Gzip output if input isn't gzip'ed
         input_bytes = os.stat(input_fqn).st_size
         if os.path.exists(output_fqn):
-            if not file_compare(input_fqn, output_fqn):         # Fall thru to copy input to output
+            diff = file_compare(input_fqn, output_fqn)
+            if diff == 'different':                     # Fall thru to copy input to output
                 self.logger.error('Move target exists: ' + output_fqn)
                 self.stats['errors'] += 1
-            else:
+                return
+            if diff == 'equal':
                 try:
                     os.remove(input_fqn)
                     self.logger.debug('Removed input that matches file in repository: ' + input_fqn)
@@ -161,8 +170,16 @@ class ProcessMoves():
                 except Exception, e:
                     self.logger.error('Removing input that matches file={} in repostisory error: {}'.format(input_fqn, e))
                     self.stats['errors'] += 1
-            return
-            
+                return
+            if diff == 'subset':
+                try:
+                    os.remove(output_fqn)
+                    self.logger.debug('Removed subset file in repository: ' + output_fqn)
+                    # Fall thru
+                except Exception, e:
+                    self.logger.error('Removing subset file={} in repostisory error: {}'.format(output_fqn, e))
+                    self.stats['errors'] += 1
+                    return
         if input_gz:
             try:
                 rc = os.rename(input_fqn, output_fqn)
