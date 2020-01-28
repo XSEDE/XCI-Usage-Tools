@@ -1,0 +1,84 @@
+#!%PREFIX%/python/bin/python
+###############################################################################
+# Parse Info Svcs Apache access log file and return standard usage in CSV
+# Usage:  ./<script> [<input_file>]
+# Input:  text <input_file> or stdin, accept gzip'ed (.gz) <input_file>
+# Output: stdout in CSV
+###############################################################################
+from datetime import datetime, timezone
+import csv
+import gzip
+import sys
+import re
+
+# All possible output fields
+#   Required:     'USED_COMPONENT', 'USE_TIMESTAMP', 'USE_CLIENT',
+#   Recommended:  'USE_USER', 'USED_COMPONENT_VERSION', 'USED_RESOURCE'
+#   Optional:     'USAGE_STATUS'
+
+#==== CUSTOMIZATION VARIABLES ====================
+
+# Parsing regular expression
+LOG_REGEX = '\[(?P<date>.*?)\] (?P<ip>[(\d\.)]+) - (?P<user>\S+) "(?P<method>\w+) (?P<request_path>.*?) HTTP/(?P<http_version>.*?)" (?P<status_code>\d+) (?P<response_size>\S+?)( "(?P<referrer>.*?)" "(?P<user_agent>.*?)" )?'
+compiled = re.compile(LOG_REGEX)
+
+#==== END OF CUSTOMIZATIONS ====================
+
+if __name__ == '__main__':
+    if len(sys.argv) > 1:
+        file = sys.argv[1]      # First arg after program name, 0 indexed
+        if file[-3:] == '.gz':
+            input_fd = gzip.open(file, mode='rt')
+        else:
+            input_fd = open(file, 'rt')
+    else:
+        input_fd = sys.stdin
+
+# The fields we are generating
+    OUTPUT_FIELDS = ['USED_COMPONENT', 'USE_TIMESTAMP', 'USE_CLIENT', 'USE_USER', 'USED_RESOURCE', 'USAGE_STATUS']
+
+    input = input_fd
+    output = csv.writer(sys.stdout, delimiter=',', quotechar='|')
+
+    COMPONENT = 'org.xsede.rsp'
+    
+    matches = 0
+    for line in input:
+        match = compiled.match(line)
+        if not match:
+            continue
+
+        o = {}
+        o['USED_COMPONENT']         = COMPONENT
+
+        o['USED_COMPONENT_VERSION'] = None
+
+        date_parse = datetime.strptime(match.group('date'), "%d/%b/%Y:%H:%M:%S %z").astimezone(tz=timezone.utc)
+        o['USE_TIMESTAMP']          = date_parse.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        o['USE_CLIENT']             = match.group('ip')
+
+        #if match.group('drupal_username') and match.group('drupal_username') != '-':
+        #    if match.group('drupal_username').endswith('@xsede.org'):
+        #        o['USE_USER']       = 'xsede:' + match.group('drupal_username')[0:-10]
+        #    else:
+        #        o['USE_USER']       = 'other:' + match.group('drupal_username')
+        if match.group('user') == '-':
+            o['USE_USER']           = None
+        elif match.group('user').endswith('@TERAGRID.ORG'):
+            o['USE_USER']           = 'xsede:' + match.group('user')[0:-13]
+        else:
+            o['USE_USER']           = 'other:' + match.group('user')
+
+        o['USED_RESOURCE']          = '{} {}'.format(match.group('method'), match.group('request_path'))
+
+        o['USAGE_STATUS']           = '{} {}'.format(match.group('status_code'), match.group('response_size'))
+
+        # PLACE FILTER CODE HERE 
+        # if <filter_expression>:
+        #   continue
+
+        matches += 1
+        if matches == 1:
+            output.writerow(OUTPUT_FIELDS)
+        output.writerow([o[f] for f in OUTPUT_FIELDS])
