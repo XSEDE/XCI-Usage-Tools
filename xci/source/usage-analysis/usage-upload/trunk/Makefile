@@ -58,7 +58,7 @@ python-virtualenv:
 ifeq ($(APP),glue2)
 CRON_SRC=bin/upload_glue2.cron.in
 uploadapp: uploadapp_var usage_tools upload_APP.cron upload_APP.conf APP_history_parser.py upload_APP.sh
-else ($(APP),rabbitmqadmin)
+else ifeq ($(APP),rabbitmqadmin)
 uploadapp: uploadapp_var rabbitmq_admin_merge
 else
 CRON_SRC=bin/upload_template.cron.in
