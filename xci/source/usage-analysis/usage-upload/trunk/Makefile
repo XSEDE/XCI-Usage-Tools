@@ -121,7 +121,7 @@ rabbitmq_admin_merge:
  	     -e "s|%LD_LIBRARY_PATH%|$(LD_LIBRARY_PATH)|g" \
 	   bin/rabbitmq_merge_access_log.cron.in >$(PREFIX)/bin/rabbitmq_merge_access_log.cron
 	@chmod 755 $(PREFIX)/bin/rabbitmq_merge_access_log.cron
-	@sed -e "s|%PYTHON%|$(PYTHON)|g" \
+	@sed -e "s|%PREFIX%|$(PREFIX)|g" \
 	   bin/rabbitmq_merge_access_log.py.in >$(PREFIX)/bin/rabbitmq_merge_access_log.py
 	@chmod 755 $(PREFIX)/bin/rabbitmq_merge_access_log.py
 

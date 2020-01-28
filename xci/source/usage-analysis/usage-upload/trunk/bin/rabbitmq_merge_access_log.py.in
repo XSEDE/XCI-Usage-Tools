@@ -36,7 +36,7 @@ class Process():
             pdb.set_trace()
 
         # Hardcoded config because we don't want to have a config file
-        self.config = {'LOG_FILE': '/soft/usage-upload/var/merge_rabbitmq_access_log.log'}
+        self.config = {'LOG_FILE': '/var/log/rabbitmq/merge_rabbitmq_access_log.log'}
 
         # Initialize logging from arguments, or config file, or default to WARNING as last resort
         numeric_log = None
