@@ -1,0 +1,10 @@
+#!/bin/bash
+###############################################################################
+# rabbitmq_merge_access_log.cron
+###############################################################################
+
+MY_BASE="%PREFIX%"
+export LD_LIBRARY_PATH="%LD_LIBRARY_PATH%"
+source ${MY_BASE}/python/bin/activate
+
+${MY_BASE}/bin/rabbitmq_merge_access_log.py -l info
