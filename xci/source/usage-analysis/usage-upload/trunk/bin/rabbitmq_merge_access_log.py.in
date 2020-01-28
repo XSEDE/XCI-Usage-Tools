@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!%PREFIX%/python/bin/python
 #
 # Merges RabbitMQ access.log.2020_01_27_17 like hourly files into access.log-20200127.gz like daily files
 #

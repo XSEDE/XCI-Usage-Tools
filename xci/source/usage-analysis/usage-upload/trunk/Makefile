@@ -58,6 +58,8 @@ python-virtualenv:
 ifeq ($(APP),glue2)
 CRON_SRC=bin/upload_glue2.cron.in
 uploadapp: uploadapp_var usage_tools upload_APP.cron upload_APP.conf APP_history_parser.py upload_APP.sh
+else ($(APP),rabbitmqadmin)
+uploadapp: uploadapp_var rabbitmq_admin_merge
 else
 CRON_SRC=bin/upload_template.cron.in
 uploadapp: uploadapp_var usage_tools upload_APP.cron upload_APP.conf APP_parser.py
@@ -112,6 +114,16 @@ APP_parser.py:
 	       bin/$(APP)_parser.py.in >$(PREFIX)/bin/$(APP)_parser.py ; \
 	    chmod 755 $(PREFIX)/bin/$(APP)_parser.py ; \
         fi;
+
+rabbitmq_admin_merge:
+	@echo "** Generating $(PREFIX)/bin/rabbitmq_merge_access_log ..."
+	@sed -e "s|%PREFIX%|$(PREFIX)|g" \
+ 	     -e "s|%LD_LIBRARY_PATH%|$(LD_LIBRARY_PATH)|g" \
+	   bin/rabbitmq_merge_access_log.cron.in >$(PREFIX)/bin/rabbitmq_merge_access_log.cron
+	@chmod 755 $(PREFIX)/bin/rabbitmq_merge_access_log.cron
+	@sed -e "s|%PYTHON%|$(PYTHON)|g" \
+	   bin/rabbitmq_merge_access_log.py.in >$(PREFIX)/bin/rabbitmq_merge_access_log.py
+	@chmod 755 $(PREFIX)/bin/rabbitmq_merge_access_log.py
 
 package:
 	@echo "** Building package $(BUILD_BASE)/$(BUNDLE_NAME).tgz"
