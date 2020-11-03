@@ -123,6 +123,7 @@ class ProcessMoves():
         start_ts = datetime.now(utc)
         start_moves = self.stats['moves']
         source_path = moveitem.get('source', '')
+        source_keep = moveitem.get('source_keep', 'False').lower()
         if not os.access(source_path, os.R_OK):
             self.logger.error('Move source is not readable: ' + source_path)
             return
@@ -142,12 +143,12 @@ class ProcessMoves():
      	move_filenames = [f for f in os.listdir(source_path) if os.path.isfile(os.path.join(source_path, f))]
         for source_filename in move_filenames:
             dest_filename = dest_file_prefix + source_filename
-            rc = self.move_one_file(os.path.join(source_path, source_filename), os.path.join(dest_path, dest_filename))
+            rc = self.move_one_file(os.path.join(source_path, source_filename), os.path.join(dest_path, dest_filename), source_keep)
         end_ts = datetime.now(utc)
         end_moves = self.stats['moves']
         self.logger.debug('Done  moving from={} files={} elapsed={}/seconds'.format(source_path, end_moves - start_moves, round((end_ts - start_ts).total_seconds(), 3)))
 
-    def move_one_file(self, input_fqn, output_fqn): # Different paths with the same file name
+    def move_one_file(self, input_fqn, output_fqn, source_keep): # Different paths with the same file name
         input_gz = is_gz_file(input_fqn)
         if (input_gz and input_fqn[-3:] != '.gz') or ( not input_gz and input_fqn[-3:] == '.gz'):
             self.logger.error('Move source file extension and gzip contents do not match: ' + input_fqn)
@@ -163,13 +164,16 @@ class ProcessMoves():
                 self.stats['errors'] += 1
                 return
             if diff == 'equal':
-                try:
-                    os.remove(input_fqn)
-                    self.logger.debug('Removed input that matches file in repository: ' + input_fqn)
+                if source_keep != 'true':
+                    try:
+                        os.remove(input_fqn)
+                        self.logger.debug('Removed input that matches file in repository: ' + input_fqn)
+                        self.stats['skipped'] += 1
+                    except Exception, e:
+                        self.logger.error('Removing input that matches file={} in repostisory error: {}'.format(input_fqn, e))
+                        self.stats['errors'] += 1
+                else:
                     self.stats['skipped'] += 1
-                except Exception, e:
-                    self.logger.error('Removing input that matches file={} in repostisory error: {}'.format(input_fqn, e))
-                    self.stats['errors'] += 1
                 return
             if diff == 'subset':
                 try:
@@ -182,7 +186,11 @@ class ProcessMoves():
                     return
         if input_gz:
             try:
-                rc = os.rename(input_fqn, output_fqn)
+                with open(input_fqn, 'rb') as fh_read:
+                    with open(output_fqn, mode='wb') as fh_write:
+                        shutil.copyfileobj(fh_read, fh_write)
+                if source_keep != 'true':
+                    os.remove(input_fqn)
             except Exception, e:
                 self.logger.error('Moving file={} error: '.format(input_fqn, e))
                 self.stats['errors'] += 1
@@ -192,8 +200,9 @@ class ProcessMoves():
                 with open(input_fqn, 'rb') as fh_read:
                     with gzip.open(output_fqn, mode='wb', compresslevel=9) as fh_write:
                         shutil.copyfileobj(fh_read, fh_write)
-                os.remove(input_fqn)
-            except Exception, e:
+                if source_keep != 'true':
+                    os.remove(input_fqn)
+             except Exception, e:
                 self.logger.error('gzip copy and remove file={} error: {}'.format(input_fqn, e))
                 self.stats['errors'] += 1
                 return
