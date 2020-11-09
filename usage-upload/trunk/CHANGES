@@ -1,3 +1,4 @@
+1.9-1  Remove decode('utf-8') which isn't needed in Python3
 1.9-0  Add rabbitmq_merge_access_log.py, bin/info_apache_parser.py.in, etc/upload_info_apache.conf 
 1.8-4  Add new info_apache_parser.py.in and upload_info_apache.conf
 1.8-3  Fix file glob
