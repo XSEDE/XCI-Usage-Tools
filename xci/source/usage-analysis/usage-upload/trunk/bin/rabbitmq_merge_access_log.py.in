@@ -52,8 +52,10 @@ class Process():
         self.logger.setLevel(numeric_log)
         self.formatter = logging.Formatter(fmt='%(asctime)s.%(msecs)03d %(levelname)s %(message)s', \
                                            datefmt='%Y/%m/%d %H:%M:%S')
-        self.handler = logging.handlers.TimedRotatingFileHandler(self.config['LOG_FILE'], when='W6', \
-                                                                 backupCount=999, utc=True)
+        # Replaced because RabbitMQ now rotates /var/log/rabbitmq/*.log files, 2020-11-10 by JP
+        #self.handler = logging.handlers.TimedRotatingFileHandler(self.config['LOG_FILE'], when='W6', \
+        #                                                         backupCount=999, utc=True)
+        self.handler = logging.handlers.FileHandler(self.config['LOG_FILE'])
         self.handler.setFormatter(self.formatter)
         self.logger.addHandler(self.handler)
 
