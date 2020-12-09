@@ -202,7 +202,7 @@ class ProcessMoves():
                         shutil.copyfileobj(fh_read, fh_write)
                 if source_keep != 'true':
                     os.remove(input_fqn)
-             except Exception, e:
+            except Exception, e:
                 self.logger.error('gzip copy and remove file={} error: {}'.format(input_fqn, e))
                 self.stats['errors'] += 1
                 return
