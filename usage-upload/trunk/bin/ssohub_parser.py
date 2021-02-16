@@ -101,6 +101,8 @@ if __name__ == '__main__':
         # PLACE FILTER CODE HERE 
         # if <filter_expression>:
         #   continue
+        if match_user in ('', 'local:root', 'local:pcp'):
+            continue
 
         matches += 1
         if matches == 1:
