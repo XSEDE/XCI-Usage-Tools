@@ -1,4 +1,4 @@
-#!/soft/metrics-tools/venv-1.0/bin/python
+#!/soft/XCI-Usage-Tools/python/bin/python3
 ###############################################################################
 # Parse Audit log and return standard usage (LOGIN) in CSV
 # Usage:  ./<script> [<input_file>]

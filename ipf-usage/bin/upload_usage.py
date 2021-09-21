@@ -1,6 +1,5 @@
-#!/soft/ipf-usage/python/bin/python
+#!/soft/XCI-Usage-Tools/python/bin/python3
 
-from __future__ import print_function
 import argparse
 import datetime
 from datetime import datetime, tzinfo, timedelta

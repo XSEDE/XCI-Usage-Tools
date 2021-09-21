@@ -1,4 +1,4 @@
-#!%PREFIX%/python/bin/python
+#!/soft/XCI-Usage-Tools/python/bin/python3
 ###############################################################################
 # Parse a glue2 history usage file and return standard usage in CSV
 # Usage:  ./<script> [<input_file>]

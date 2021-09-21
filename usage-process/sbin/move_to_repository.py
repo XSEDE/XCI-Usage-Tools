@@ -1,9 +1,8 @@
-#!/usr/bin/env python
+#!/soft/XCI-Usage-Tools/python/bin/python3
 ###############################################################################
 # 
 ###############################################################################
 
-from __future__ import print_function
 import argparse
 import binascii
 import datetime

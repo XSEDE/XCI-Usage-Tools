@@ -1,6 +1,5 @@
-#!/soft/usage-process-python/bin/python
+#!/soft/XCI-Usage-Tools/python/bin/python3
 
-from __future__ import print_function
 import argparse
 import csv
 import fnmatch

@@ -1,11 +1,10 @@
-#!/soft/usage-process-python/bin/python
+#!/soft/XCI-Usage-Tools/python/bin/python3
 
 # The initial basic usage reports that will be generated are:
 # 1) How many times a component was used in a month, quarter, or year.
 # 2) How many clients used a service component in a month, quarter, or year.
 # 3) How many distinct users used a component in a month, quarter, or year.
 
-from __future__ import print_function
 import argparse
 import csv
 import datetime
