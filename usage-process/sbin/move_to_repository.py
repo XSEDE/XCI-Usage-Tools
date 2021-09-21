@@ -82,7 +82,7 @@ class ProcessMoves():
         try:
             with open(config_path, 'r') as f:
                 self.config = json.load(f)
-        except ValueError, e:
+        except ValueError as e:
             eprint('ERROR: "{}" parsing config={}'.format(e, config_path))
             sys.exit(1)
 
@@ -168,7 +168,7 @@ class ProcessMoves():
                         os.remove(input_fqn)
                         self.logger.debug('Removed input that matches file in repository: ' + input_fqn)
                         self.stats['skipped'] += 1
-                    except Exception, e:
+                    except Exception as e:
                         self.logger.error('Removing input that matches file={} in repostisory error: {}'.format(input_fqn, e))
                         self.stats['errors'] += 1
                 else:
@@ -179,7 +179,7 @@ class ProcessMoves():
                     os.remove(output_fqn)
                     self.logger.debug('Removed subset file in repository: ' + output_fqn)
                     # Fall thru
-                except Exception, e:
+                except Exception as e:
                     self.logger.error('Removing subset file={} in repostisory error: {}'.format(output_fqn, e))
                     self.stats['errors'] += 1
                     return
@@ -190,7 +190,7 @@ class ProcessMoves():
                         shutil.copyfileobj(fh_read, fh_write)
                 if source_keep != 'true':
                     os.remove(input_fqn)
-            except Exception, e:
+            except Exception as e:
                 self.logger.error('Moving file={} error: '.format(input_fqn, e))
                 self.stats['errors'] += 1
                 return
@@ -201,7 +201,7 @@ class ProcessMoves():
                         shutil.copyfileobj(fh_read, fh_write)
                 if source_keep != 'true':
                     os.remove(input_fqn)
-            except Exception, e:
+            except Exception as e:
                 self.logger.error('gzip copy and remove file={} error: {}'.format(input_fqn, e))
                 self.stats['errors'] += 1
                 return

@@ -48,7 +48,7 @@ class RepositoryProcess():
         try:
             with open(config_path, 'r') as cf:
                 self.config = json.load(cf)
-        except ValueError, e:
+        except ValueError as e:
             eprint('ERROR "{}" parsing config={}'.format(e, config_path))
             sys.exit(1)
 
@@ -155,7 +155,7 @@ class RepositoryProcess():
                 for line in iter(last_stdout):
                     output_f.write(line)
             self.stats['processed'] += 1
-        except subprocess.CalledProcessError, e:
+        except subprocess.CalledProcessError as e:
             self.logger.error('ERROR: "{}" in command pipe'.format(e))
             self.stats['errors'] += 1
  

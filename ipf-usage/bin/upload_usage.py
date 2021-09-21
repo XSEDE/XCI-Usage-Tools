@@ -47,7 +47,7 @@ class HandleUpload():
         try:
             with open(config_path, 'r') as cf:
                 self.config = json.load(cf)
-        except ValueError, e:
+        except ValueError as e:
             eprint('Error "{}" parsing config={}'.format(e, config_path))
             sys.exit(1)
 
@@ -100,7 +100,7 @@ class HandleUpload():
 
         try:
             rsakey = paramiko.RSAKey.from_private_key_file(self.config.get('RSA_KEY'))
-        except Exception, e:
+        except Exception as e:
             self.logger.error('Exception "{}" loading RSA private key {}'.format(e, self.config.get('RSA_KEY')))
             sys.exit(1)
         
@@ -111,13 +111,13 @@ class HandleUpload():
                 port=self.config.get('REMOTE_PORT', '22'),
                 username=self.config.get('REMOTE_USERNAME'),
                 pkey=rsakey)
-        except Exception, e:
+        except Exception as e:
             self.logger.error('ssh_client_connect error: {}'.format(e))
             sys.exit(1)
 
         try:
             self.scp_client = ssh_client.open_sftp()
-        except Exception, e:
+        except Exception as e:
             self.logger.error('ssh_client.open_sftp() error: {}'.format(e))
             sys.exit(1)
 
@@ -126,7 +126,7 @@ class HandleUpload():
 
         try:
             self.scp_client.close()
-        except Exception, e:
+        except Exception as e:
             self.logger.error('scp_client.close() error: {}'.format(e))
             sys.exit(1)
 
@@ -182,8 +182,8 @@ class HandleUpload():
                     remote_filename = local_filename[:-3] + '.usage.csv.gz'
                 else:
                     remote_filename = local_filename + '.usage.csv.gz'
-#           except subprocess.CalledProcessError, e:
-            except Exception, e:
+#           except subprocess.CalledProcessError as e:
+            except Exception as e:
                 self.logger.error('Parsing step failed: {}'.format(e))
                 self.stats['skipped'] += 1
                 return
@@ -206,7 +206,7 @@ class HandleUpload():
             self.stats['bytes'] += remote_stat.st_size                  # Total bytes
             self.stats['uploads'] += 1
             self.logger.info('Uploaded  file={}, size={}'.format(remote_filename, remote_stat.st_size))
-        except Exception, e:
+        except Exception as e:
             my_status['upload_rc'] = str(e)
             self.stats['errors'] += 1
             self.logger.error('scp_client.put "{}" failed: {}'.format(remote_filename, e))

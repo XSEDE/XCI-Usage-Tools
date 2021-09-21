@@ -36,7 +36,7 @@ class Filter():
         try:
             with open(config_path, 'r') as cf:
                 self.config = json.load(cf)
-        except ValueError, e:
+        except ValueError as e:
             eprint('ERROR "{}" parsing config={}'.format(e, config_path))
             sys.exit(1)
 
