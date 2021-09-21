@@ -74,14 +74,14 @@ class RepositoryProcess():
 
         for c in ['file_status_file', 'source_dir', 'target_dir']:
             if not self.config.get(c, None):
-                eprint('Missing config "{}"'.format(c))
+                self.logger.error('Missing config "{}"'.format(c))
                 sys.exit(1)
 
         try:
             with open(self.config['file_status_file']) as fh:
                 self.file_status = json.load(fh)
         except Exception as e:
-            eprint('ERROR loading config={}, initializing'.format(self.config['file_status_file']))
+            self.logger.error('ERROR loading config={}, initializing'.format(self.config['file_status_file']))
             self.file_status = {}
 
         self.STEPS = {}
@@ -95,7 +95,7 @@ class RepositoryProcess():
         print_steps = []
         for s in sorted(self.STEPS):
             print_steps.append(self.STEPS[s].split()[0])
-        eprint('Steps {}'.format(' | '.join(print_steps)))
+        self.logger.info('Steps {}'.format(' | '.join(print_steps)))
 
         self.stats = {
             'skipped': 0,
@@ -106,12 +106,12 @@ class RepositoryProcess():
 
         SOURCE_DIR = self.config.get('source_dir', None)
         if not os.path.isdir(SOURCE_DIR):
-            eprint('ERROR config source_dir={} is not a directory'.format(SOURCE_DIR))
+            self.logger.error('ERROR config source_dir={} is not a directory'.format(SOURCE_DIR))
             sys.exit(1)
         SOURCE_GLOB = self.config.get('source_glob', '*')
         files = [f for f in fnmatch.filter(os.listdir(SOURCE_DIR), SOURCE_GLOB) if os.path.isfile(os.path.join(SOURCE_DIR, f))]
         if len(files) == 0:
-            eprint('WARNING no files in source_dir={} match source_glob={}'.format(SOURCE_DIR, SOURCE_GLOB))
+            self.logger.warning('WARNING no files in source_dir={} match source_glob={}'.format(SOURCE_DIR, SOURCE_GLOB))
             sys.exit(1)
 
         self.FILES = {}
@@ -120,7 +120,7 @@ class RepositoryProcess():
 
         self.TARGET_DIR = self.config.get('target_dir', None)
         if not os.path.isdir(self.TARGET_DIR):
-            eprint('ERROR config target_dir={} is not a directory'.format(self.TARGET_DIR))
+            self.logger.error('ERROR config target_dir={} is not a directory'.format(self.TARGET_DIR))
             sys.exit(1)
         self.TARGET_EXTENSION = self.config.get('target_extension', None)
 
@@ -139,7 +139,7 @@ class RepositoryProcess():
 
         this_history['in_size'] = input_stat.st_size
         this_history['in_mtime'] = input_mtime_str
-        eprint("Processing {} mtime={} size={}".format(file_name, input_mtime_str, input_stat.st_size))
+        self.logger.info("Processing {} mtime={} size={}".format(file_name, input_mtime_str, input_stat.st_size))
           
         sp = {}
         for step in sorted(self.STEPS):
@@ -157,7 +157,7 @@ class RepositoryProcess():
                     output_f.write(line)
             self.stats['processed'] += 1
         except subprocess.CalledProcessError, e:
-            eprint('ERROR: "{}" in command pipe'.format(e))
+            self.logger.error('ERROR: "{}" in command pipe'.format(e))
             self.stats['errors'] += 1
  
         output_stat = os.stat(out_file_fqn)
@@ -172,7 +172,7 @@ class RepositoryProcess():
                 json.dump(self.file_status, file, indent=4, sort_keys=True)
                 file.close()
         except IOError:
-            eprint('Failed to write config=' + self.config['file_status_file'])
+            self.logger.error('Failed to write config=' + self.config['file_status_file'])
             sys.exit(1)
 
 if __name__ == '__main__':
@@ -181,7 +181,7 @@ if __name__ == '__main__':
     for file in sorted(process.FILES):
         rc = process.process_file(file, process.FILES[file])
     end_utc = datetime.now(utc)
-    eprint("Processed files={}, seconds={}, skipped={}, errors={}".format(
+    process.logger.info("Processed files={}, seconds={}, skipped={}, errors={}".format(
         process.stats['processed'], (end_utc - start_utc).total_seconds(), 
         process.stats['skipped'], process.stats['errors']))
     rc = process.finish()
