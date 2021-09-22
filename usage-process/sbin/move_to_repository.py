@@ -139,7 +139,7 @@ class ProcessMoves():
         dest_file_prefix = moveitem.get('destination_file_prefix', '')
         self.logger.debug('Start moving from={} to={}, target_prefix={}'.format(source_path, dest_path, dest_file_prefix))
 
-     	move_filenames = [f for f in os.listdir(source_path) if os.path.isfile(os.path.join(source_path, f))]
+        move_filenames = [f for f in os.listdir(source_path) if os.path.isfile(os.path.join(source_path, f))]
         for source_filename in move_filenames:
             dest_filename = dest_file_prefix + source_filename
             rc = self.move_one_file(os.path.join(source_path, source_filename), os.path.join(dest_path, dest_filename), source_keep)

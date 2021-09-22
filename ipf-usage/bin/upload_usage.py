@@ -94,7 +94,7 @@ class HandleUpload():
         start_utc = datetime.now(utc)
         self.logger.info('Processing {}/{}'.format(log_path, log_glob))
 
-     	matching_files = [f for f in fnmatch.filter(os.listdir(log_path), log_glob) if os.path.isfile(os.path.join(log_path, f))]
+        matching_files = [f for f in fnmatch.filter(os.listdir(log_path), log_glob) if os.path.isfile(os.path.join(log_path, f))]
         if len(matching_files) == 0:
             return
 
@@ -147,7 +147,7 @@ class HandleUpload():
 #   
 ###############################################################################
     def upload_file(self, local_filename, local_fqn):
-    	my_status = self.UPLOAD_STATUS.get(local_fqn, {})
+        my_status = self.UPLOAD_STATUS.get(local_fqn, {})
         local_filestat = os.stat(local_fqn)
         local_filemtime_str = str(datetime.fromtimestamp(local_filestat.st_mtime))
         # We don't need to process a file if:
@@ -211,7 +211,7 @@ class HandleUpload():
             self.stats['errors'] += 1
             self.logger.error('scp_client.put "{}" failed: {}'.format(remote_filename, e))
 
-    	self.UPLOAD_STATUS[local_fqn] = my_status
+        self.UPLOAD_STATUS[local_fqn] = my_status
 
     def finish(self):
         try:

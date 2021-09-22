@@ -124,7 +124,7 @@ class RepositoryProcess():
         self.TARGET_EXTENSION = self.config.get('target_extension', None)
 
     def process_file(self, file_name, file_fqn):
-    	this_history = self.file_status.get(file_fqn, {})
+        this_history = self.file_status.get(file_fqn, {})
         input_stat = os.stat(file_fqn)
         input_mtime_str = str(datetime.fromtimestamp(input_stat.st_mtime))
         newext = getattr(self, 'TARGET_EXTENSION')
@@ -163,7 +163,7 @@ class RepositoryProcess():
         this_history['output'] = out_file_fqn
         this_history['out_size'] = output_stat.st_size
         this_history['out_mtime'] = str(datetime.fromtimestamp(output_stat.st_mtime))
-    	self.file_status[file_fqn] = this_history
+        self.file_status[file_fqn] = this_history
 
     def finish(self):
         try:
