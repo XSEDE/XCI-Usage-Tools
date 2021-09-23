@@ -1,4 +1,4 @@
-#!%PREFIX%/python/bin/python
+#!%PREFIX%/python/bin/python3
 ###############################################################################
 # Parse a RabbitMQ log and return standard usage in CSV
 # Usage:  ./<script> [<input_file>]

@@ -39,9 +39,9 @@ install: python-virtualenv
 	@if [ ! -d $(PREFIX)/tmp ] ; then mkdir $(PREFIX)/tmp ; fi
 	@if [ ! -d $(PREFIX)/upload ] ; then mkdir $(PREFIX)/upload ; fi
 	@if [ ! -d $(PREFIX)/var ] ; then mkdir $(PREFIX)/var ; fi
-	sed -e "s|%PREFIX%|$(PREFIX)|g" \
-	   bin/upload_usage.py.in >$(PREFIX)/bin/upload_usage.py
-	chmod 755 $(PREFIX)/bin/upload_usage.py
+#sed -e "s|%PREFIX%|$(PREFIX)|g" \
+#   bin/upload_usage.py.in >$(PREFIX)/bin/upload_usage.py
+#chmod 755 $(PREFIX)/bin/upload_usage.py
 
 python-virtualenv:
 	@echo "** Initializing Python Virtualenv in $(VENV_BASE)"

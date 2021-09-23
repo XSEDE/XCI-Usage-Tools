@@ -14,44 +14,43 @@
 ###############################################################################
 
 Pre-requisites:
-  - Python with Virtualenv
+  - Python3 with Virtualenv
 
 1) As root create the install directory owned by the account that will upload usage
-  $ mkdir /soft/ipf-usage
-  $ chown <owner>.<group> /soft/ipf-usage
+  $ mkdir /soft/XCI-Usage-Tools
+  $ chown -R <owner>.<group> /soft/XCI-Usage-Tools
 
-For the remaining steps, switch to the account that will upload files
+For the remaining steps, switch to the account <owner> that will upload files
 
-2) Install package(s)
-  $ mkdir /soft/ipf-usage/PROD
-  $ cd    /soft/ipf-usage/PROD
-  $ svn co https://software.xsede.org/svn/xci/source/usage-analysis/ipf-usage/trunk/ ./
+2) Install package(s) from the latest or desired <TAG>
+  $ cd  /soft/XCI-Usage-Tools
+  $ mkdir tags
+  $ git clone --branch <TAG> https://github.com/XSEDE/XCI-Usage-Tools.git tags/<TAG>
 
 3) Configure package(s)
   # Create local directories
-  $ mkdir /soft/ipf-usage/conf
-  $ mkdir /soft/ipf-usage/var
+  $ mkdir conf
+  $ mkdir var
 
   # Generate SSH keys without a passphrase
-  $ ssh-keygen -t rsa -f /soft/ipf-usage/conf/id_rsa
+  $ ssh-keygen -t rsa -f conf/id_rsa
   # Send the id_rsa.pub public key to the Usage Collection Service administrators
 
   # Create the configuration files
-  $ cp /soft/ipf-usage/PROD/conf/upload_rabbitmq.conf.example \
-       /soft/ipf-usage/conf/upload_rabbitmq.conf
+  $ cp /soft/XCI-Usage-Tools/PROD/usage-upload/conf/upload_rabbitmq.conf.example \
+       /soft/XCI-Usage-Tools/conf/upload_rabbitmq.conf
 
   # Edit upload_rabbitmq.conf to configure
 
-  # Set PYTHON_BASE as appropriate
-  vi PROD/bin/python-venv-init.sh
-  vi PROD/bin/upload_rabbitmq.sh
 
 4) Generate a custom Python venv with some required packages
-  $ /soft/ipf-usage/PROD/bin/python-venv-init.sh
+  # Build Python3 venv
+  $ /soft/XCI-Usage-Tools/PROD/bin/python-venv-init.sh
+  vi PROD/bin/upload_rabbitmq.sh
 
 5) Test and run in production
   # Test by hand
-  $ /soft/ipf-usage/PROD/bin/upload_rabbimq.sh
+  $ /soft/XCI-Usage-Tools/PROD/ipf-usage/bin/upload_rabbitmq.sh
   # Check logs in var/ and status in conf/
   # Install in cron
-  0 6 * * 1 /soft/ipf-usage/PROD/bin/upload_rabbitmq.sh
+  0 6 * * 1 /soft/XCI-Usage-Tools/PROD/ipf-usage/bin/upload_rabbitmq.sh

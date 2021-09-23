@@ -1,4 +1,4 @@
-#!%PREFIX%/python/bin/python
+#!%PREFIX%/python/bin/python3
 ###############################################################################
 # Moves usage files in one directory to another
 # Skipping files with the same content or with less in the source
