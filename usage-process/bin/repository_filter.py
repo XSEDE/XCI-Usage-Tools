@@ -79,7 +79,7 @@ class Filter():
     def filter_file(self, file_name):
         if file_name:
             if file_name[-3:] == '.gz':
-                fd = gzip.open(file_name, mode='r')
+                fd = gzip.open(file_name, mode='rt')
             else:
                 fd = open(file_name, mode='r')
         else:
