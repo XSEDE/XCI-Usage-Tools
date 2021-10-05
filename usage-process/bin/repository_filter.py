@@ -86,27 +86,18 @@ class Filter():
             fd = sys.stdin
         
         csv_reader = csv.DictReader(fd, delimiter=',', quotechar='|')
-        try:
-            row = csv_reader.next()
-        except StopIteration:
-            fd.close()
-            return
         if not csv_reader.fieldnames or 'USED_COMPONENT' not in csv_reader.fieldnames:
             eprint('ERROR file is missing CSV fields: {}'.format(file_name))
             fd.close()
             return
         csv_writer = csv.DictWriter(sys.stdout, fieldnames=csv_reader._fieldnames, delimiter=',', quotechar='|')
         csv_writer.writeheader()
-        while row:
+        for row in csv_reader:
             row1 = self.filter_action_simple(row, 'USE_USER', self.USER_FILTER)
             if row1:
                 row2 = self.filter_action_subnet(row1, 'USE_CLIENT', self.CLIENT_FILTER)
                 if row2:
                     csv_writer.writerow(row2)
-            try:
-                row = csv_reader.next()
-            except StopIteration:
-                row = None
 
         fd.close()
 
