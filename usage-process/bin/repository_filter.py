@@ -136,7 +136,7 @@ class Filter():
         #ip = ipaddress.IPv4Address(row[field])
         # In Python2
         ip = ip_to_u32(row[field])
-        for rule, network in self.CLIENT_NETS.iteritems():
+        for rule, network in iter(self.CLIENT_NETS.items()):
             mask, net = network
             if ip & mask == net:
                action = self.CLIENT_FILTER[rule]
