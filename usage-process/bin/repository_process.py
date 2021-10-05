@@ -10,6 +10,7 @@ import json
 import logging
 import logging.handlers
 import os
+from pid import PidFile
 import re
 import subprocess
 import sys
@@ -52,6 +53,12 @@ class RepositoryProcess():
             eprint('ERROR "{}" parsing config={}'.format(e, config_path))
             sys.exit(1)
 
+        if self.config.get('PID_FILE'):
+            self.pidfile_path = self.config['PID_FILE']
+        else:   # Only one program may run per status file
+            self.pidfile_path = self.config['file_status_file'] + '.pid'
+
+    def Setup_Logging(self):
         # Initialize logging from arguments, or config file, or default to WARNING as last resort
         numeric_log = None
         if self.args.log is not None:
@@ -71,17 +78,21 @@ class RepositoryProcess():
         self.handler.setFormatter(self.formatter)
         self.logger.addHandler(self.handler)
 
+    def Setup(self):
         for c in ['file_status_file', 'source_dir', 'target_dir']:
             if not self.config.get(c, None):
                 self.logger.error('Missing config "{}"'.format(c))
-                sys.exit(1)
+                self.exit(1)
 
         try:
             with open(self.config['file_status_file']) as fh:
-                self.file_status = json.load(fh)
-        except Exception as e:
-            self.logger.error('ERROR loading config={}, initializing'.format(self.config['file_status_file']))
-            self.file_status = {}
+                self.FILE_STATUS = json.load(fh)
+        except IOError as e:
+            self.logger.error('IO Error loading status={}, initializing'.format(self.config['file_status_file']))
+            self.FILE_STATUS = {}
+        except json.JSONDecodeError(msg, doc, pos):
+            self.logger.error('JSON error "{}", in "{}" at "{}", QUITTING'.format(msg, doc, pos))
+            self.exit(1)
 
         self.STEPS = {}
         step_re = re.compile('^step.(\d+)$', re.IGNORECASE)
@@ -106,12 +117,12 @@ class RepositoryProcess():
         SOURCE_DIR = self.config.get('source_dir', None)
         if not os.path.isdir(SOURCE_DIR):
             self.logger.error('ERROR config source_dir={} is not a directory'.format(SOURCE_DIR))
-            sys.exit(1)
+            self.exit(1)
         SOURCE_GLOB = self.config.get('source_glob', '*')
         files = [f for f in fnmatch.filter(os.listdir(SOURCE_DIR), SOURCE_GLOB) if os.path.isfile(os.path.join(SOURCE_DIR, f))]
         if len(files) == 0:
             self.logger.warning('WARNING no files in source_dir={} match source_glob={}'.format(SOURCE_DIR, SOURCE_GLOB))
-            sys.exit(1)
+            self.exit(1)
 
         self.FILES = {}
         for f in files:
@@ -120,11 +131,11 @@ class RepositoryProcess():
         self.TARGET_DIR = self.config.get('target_dir', None)
         if not os.path.isdir(self.TARGET_DIR):
             self.logger.error('ERROR config target_dir={} is not a directory'.format(self.TARGET_DIR))
-            sys.exit(1)
+            self.exit(1)
         self.TARGET_EXTENSION = self.config.get('target_extension', None)
 
     def process_file(self, file_name, file_fqn):
-        this_history = self.file_status.get(file_fqn, {})
+        this_history = self.FILE_STATUS.get(file_fqn, {})
         input_stat = os.stat(file_fqn)
         input_mtime_str = str(datetime.fromtimestamp(input_stat.st_mtime))
         newext = getattr(self, 'TARGET_EXTENSION')
@@ -141,14 +152,16 @@ class RepositoryProcess():
         self.logger.info("Processing {} mtime={} size={}".format(file_name, input_mtime_str, input_stat.st_size))
           
         sp = {}
-        for step in sorted(self.STEPS):
-            commands = self.STEPS[step].split()
-            if step == 1:
-                commands.append(file_fqn)
-                sp[step] = subprocess.Popen(commands, bufsize=1, stdout=subprocess.PIPE)
+        for stepidx in sorted(self.STEPS):
+            cmdlist = self.STEPS[stepidx].split()
+            if stepidx == 1:
+                cmdlist.append(file_fqn)
+                sp[stepidx] = subprocess.Popen(cmdlist, bufsize=1, stdout=subprocess.PIPE)
             else:
-                sp[step] = subprocess.Popen(commands, bufsize=1, stdin=sp[step-1].stdout, stdout=subprocess.PIPE)
-            last_stdout = sp[step].stdout
+                sp[stepidx] = subprocess.Popen(cmdlist, bufsize=1, stdin=sp[stepidx-1].stdout, stdout=subprocess.PIPE)
+            if self.args.verbose:
+                self.logger.debug('Step.{}: {}'.format(stepidx, ' '.join(cmdlist)))
+            last_stdout = sp[stepidx].stdout
                 
         try:
             with gzip.open(out_file_fqn, 'w') as output_f:
@@ -156,31 +169,42 @@ class RepositoryProcess():
                     output_f.write(line)
             self.stats['processed'] += 1
         except subprocess.CalledProcessError as e:
-            self.logger.error('ERROR: "{}" in command pipe'.format(e))
+            self.logger.error('Raised "{}" in command pipe'.format(e))
             self.stats['errors'] += 1
- 
+
         output_stat = os.stat(out_file_fqn)
         this_history['output'] = out_file_fqn
         this_history['out_size'] = output_stat.st_size
         this_history['out_mtime'] = str(datetime.fromtimestamp(output_stat.st_mtime))
-        self.file_status[file_fqn] = this_history
+        self.FILE_STATUS[file_fqn] = this_history
+        self.save_status()
 
-    def finish(self):
+    def save_status(self):
         try:
             with open(self.config['file_status_file'], 'w+') as file:
-                json.dump(self.file_status, file, indent=4, sort_keys=True)
+                json.dump(self.FILE_STATUS, file, indent=4, sort_keys=True)
                 file.close()
         except IOError:
-            self.logger.error('Failed to write config=' + self.config['file_status_file'])
-            sys.exit(1)
+            self.logger.error('Failed to write status=' + self.config['file_status_file'])
+            self.exit(1)
+
+    def exit(self, rc = 0):
+        sys.exit(rc)
 
 if __name__ == '__main__':
     start_utc = datetime.now(utc)
     process = RepositoryProcess()
-    for file in sorted(process.FILES):
-        rc = process.process_file(file, process.FILES[file])
+    process.Setup_Logging()
+    try:
+        with PidFile(process.pidfile_path):
+            process.Setup()
+            for file in sorted(process.FILES):
+                rc = process.process_file(file, process.FILES[file])
+    except PidFileError:
+        process.logger.critical('Pidfile lock error: {}'.format(process.pidfile_path))
+        sys.exit(1)
     end_utc = datetime.now(utc)
     process.logger.info("Processed files={}, seconds={}, skipped={}, errors={}".format(
         process.stats['processed'], (end_utc - start_utc).total_seconds(), 
         process.stats['skipped'], process.stats['errors']))
-    rc = process.finish()
+    process.exit(0)
