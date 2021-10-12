@@ -95,7 +95,10 @@ class Filter():
             row2 = self.filter_action_subnet(row1, 'USE_CLIENT', self.CLIENT_FILTER)
             if not row2:
                 continue
-            csv_writer.writerow(row2)
+            row3 = self.filter_action_cilogon_use_client(row2, 'USE_CLIENT')
+            if not row3:
+                continue
+            csv_writer.writerow(row3)
 
         fd.close()
 
