@@ -69,13 +69,9 @@ class Filter():
                 mask = (0xffffffff << (32 - int(bits))) & 0xffffffff
                 net = ip_to_u32(netstr) & mask
                 self.CLIENT_NETS[cidr] = (mask, net)
-#           else:
-#               mask = 0xffffffff
-#               net = ip_to_u32(cidr)
-#           self.CLIENT_NETS[cidr] = (mask, net)
 
-#       eprint('Loaded {}/USER_FILTER {}/CLIENT_FILTER entries'.format(len(self.USER_FILTER), len(self.CLIENT_FILTER)))
-
+        self.CILOGON_USE_CLIENT = self.config.get('cilogon_use_client')
+        
     def filter_file(self, file_name):
         if file_name:
             if file_name[-3:] == '.gz':
@@ -94,10 +90,12 @@ class Filter():
         csv_writer.writeheader()
         for row in csv_reader:
             row1 = self.filter_action_simple(row, 'USE_USER', self.USER_FILTER)
-            if row1:
-                row2 = self.filter_action_subnet(row1, 'USE_CLIENT', self.CLIENT_FILTER)
-                if row2:
-                    csv_writer.writerow(row2)
+            if not row1:
+                continue
+            row2 = self.filter_action_subnet(row1, 'USE_CLIENT', self.CLIENT_FILTER)
+            if not row2:
+                continue
+            csv_writer.writerow(row2)
 
         fd.close()
 
@@ -147,6 +145,16 @@ class Filter():
                if command == 'map':
                    row[field] = action_fields[1]
                return(row)
+        return(row)
+
+    ##########################################################################
+    # Custom filter for cilogon use_client
+    ##########################################################################
+    def filter_action_cilogon_use_client(self, row, field):
+        if self.CILOGON_USE_CLIENT:
+            client = row.get(field,'')
+            if client.lower() not in ('ecp', 'pkcs12', ''):
+                row[field] = 'OAUTH_client_name:{}'.format(client)
         return(row)
 
     def finish(self):
