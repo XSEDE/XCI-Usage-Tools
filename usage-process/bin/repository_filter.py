@@ -1,6 +1,7 @@
 #!/soft/XCI-Usage-Tools/python/bin/python3
 import argparse
 import csv
+from datetime import datetime
 import fnmatch
 import gzip
 import json
@@ -69,7 +70,7 @@ class Filter():
         if LOGFILE.lower() == 'stdout':
             self.handler = logging.StreamHandler(sys.stdout)
         else:
-            self.handler = logging.handlers.FileHandler(self.config['LOG_FILE'])
+            self.handler = logging.FileHandler(self.config['LOG_FILE'])
         self.handler.setFormatter(self.formatter)
         self.logger.addHandler(self.handler)
 
