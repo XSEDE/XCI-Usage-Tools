@@ -23,7 +23,7 @@ class Filter():
     def __init__(self):
         # Variales that must be defined
         self.IN_FD = None
-        self.OUT_WRITER = None
+        self.OUT_FD = None
         self.ROWS_BEFORE = 0
         self.ROWS_AFTER = 0
 
