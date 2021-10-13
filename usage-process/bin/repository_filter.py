@@ -9,6 +9,7 @@ import logging
 import logging.handlers
 import os
 import pwd
+import re
 import signal
 import sys
 import pdb
@@ -80,6 +81,16 @@ class Filter():
 
         self.logger.debug('Starting pid={}, uid={}({})'.format(os.getpid(), os.geteuid(), pwd.getpwuid(os.geteuid()).pw_name))
 
+        COMPONENT_FILTER_FILE = self.config.get('user_filter_file')
+        self.COMPONENT_FILTER = None
+        if COMPONENT_FILTER_FILE:
+            try:
+                with open(COMPONENT_FILTER_FILE) as fh:
+                   self.COMPONENT_FILTER = json.load(fh)
+            except Exception as e:
+                self.logger.error('Loading user map={}'.format(COMPONENT_FILTER_FILE))
+                sys.exit(1)
+
         USER_FILTER_FILE = self.config.get('user_filter_file')
         self.USER_FILTER = None
         if USER_FILTER_FILE:
@@ -112,6 +123,17 @@ class Filter():
 
         self.CILOGON_USE_CLIENT = self.config.get('cilogon_use_client')
 
+        USED_RESOURCE_REGEXS_CONFIG = self.config.get('used_resource_regexs')
+        self.USED_RESOURCE_REGEXS = list()
+        if USED_RESOURCE_REGEXS_CONFIG:
+            # Pre-compile all the regular expressions
+            for REGEX = USED_RESOURCE_REGEXS_CONFIG:
+                try:
+                    self.USED_RESOURCE_REGEXS.append(re.compile(REGEX))
+                except:
+                    self.logger.error('used_resource_regexs compile failed: {}'.format(REGEX))
+                    self.exit(1)
+
         if self.args.file:
             if self.args.file[-3:] == '.gz':
                 self.IN_FD = gzip.open(self.args.file, mode='rt')
@@ -143,6 +165,9 @@ class Filter():
         OUTPUT = self.OUT_WRITER
         for row in INPUT:
             self.ROWS_BEFORE += 1
+            if self.COMPONENT_FILTER:
+                row = self.filter_action_simple(row, 'USED_COMPONENT', self.COMPONENT_FILTER)
+                if not row: continue
             if self.USER_FILTER:
                 row = self.filter_action_simple(row, 'USE_USER', self.USER_FILTER)
                 if not row: continue
@@ -151,6 +176,9 @@ class Filter():
                 if not row: continue
             if self.CILOGON_USE_CLIENT:
                 row = self.filter_action_cilogon_use_client(row, 'USE_CLIENT')
+                if not row: continue
+            if self.USED_RESOURCE_REGEXS:
+                row = self.filter_action_regexs(row, 'USED_RESOURCE', self.USED_RESOURCE_REGEXS)
                 if not row: continue
             OUTPUT.writerow(row)
             self.ROWS_AFTER += 1
@@ -169,8 +197,7 @@ class Filter():
             action = filter_rules[row[field]]
             action_fields = action.split(':', 1)        # Actions are "DELETE", "MAP:<replacement_value>"
             command = action_fields[0].lower()
-            if command == 'delete':
-                return(None)  
+            if command == 'delete': return(None)
             if command == 'map':
                 row[field] = action_fields[1]
         except:
@@ -202,8 +229,7 @@ class Filter():
                action = self.CLIENT_FILTER[rule]
                action_fields = action.split(':', 1)        # Actions are "DELETE", "MAP:<replacement_value>"
                command = action_fields[0].lower()
-               if command == 'delete':
-                   return(None)  
+               if command == 'delete': return(None)
                if command == 'map':
                    row[field] = action_fields[1]
                return(row)
@@ -216,6 +242,16 @@ class Filter():
         client = row.get(field,'')
         if client.lower() not in ('ecp', 'pkcs12', ''):
             row[field] = 'OAUTH_client_name:{}'.format(client)
+        return(row)
+
+    ##########################################################################
+    # Complex multiple regex matching filter
+    ##########################################################################
+    def filter_action_regexs(self, row, field, filter_regexs):
+        val = row.get(field, '')
+        for regex in filter_regexs:
+            match = re.search(regex, val)
+            if not match: return(None)
         return(row)
 
     ##########################################################################

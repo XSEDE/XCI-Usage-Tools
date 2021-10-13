@@ -32,8 +32,8 @@ def eprint(*args, **kwargs):
 class RepositoryProcess():
     def __init__(self):
         parser = argparse.ArgumentParser()
-        parser.add_argument('-c', '--config', action='store', default='./repository_filter.conf', \
-                            help='Configuration file default=./repository_filter.conf')
+        parser.add_argument('-c', '--config', action='store', default='./repository_process.conf', \
+                            help='Configuration file default=./repository_process.conf')
         parser.add_argument('-l', '--log', action='store', \
                             help='Logging level (default=warning)')
         parser.add_argument('--verbose', action='store_true', \
