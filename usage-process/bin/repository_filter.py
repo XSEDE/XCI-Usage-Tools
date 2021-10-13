@@ -133,7 +133,8 @@ class Filter():
             self.logger.error('File is missing USED_COMPONENT field: {}'.format(self.args.file))
             self.exit(1)
 
-        self.OUT_WRITER = csv.DictWriter(sys.stdout, fieldnames=self.IN_READER._fieldnames, delimiter=',', quotechar='|')
+        self.OUT_FD = sys.stdout
+        self.OUT_WRITER = csv.DictWriter(self.OUT_FD, fieldnames=self.IN_READER._fieldnames, delimiter=',', quotechar='|')
         self.OUT_WRITER.writeheader()
 
     def Process(self):
@@ -225,8 +226,8 @@ class Filter():
     def exit(self, rc = 0):
         if self.IN_FD:
             self.IN_FD.close()
-        if self.OUT_WRITER:
-            self.OUT_WRITER.close()
+        if self.OUT_FD:
+            self.OUT_FD.close()
         sys.exit(rc)
 
 if __name__ == '__main__':
