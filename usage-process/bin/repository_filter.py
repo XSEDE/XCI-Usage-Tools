@@ -45,21 +45,25 @@ class Filter():
                 eprint('Missing config "{}"'.format(c))
                 sys.exit(1)
 
-        self.USER_FILTER_FILE = self.config['user_filter_file']
-        try:
-            with open(self.USER_FILTER_FILE) as fh:
-               self.USER_FILTER = json.load(fh)
-        except Exception as e:
-            eprint('ERROR loading map={}, initializing'.format(self.USER_FILTER_FILE))
-            self.USER_FILTER = {}
+        USER_FILTER_FILE = self.config.get('user_filter_file')
+        self.USER_FILTER = None
+        if USER_FILTER_FILE:
+            try:
+                with open(USER_FILTER_FILE) as fh:
+                   self.USER_FILTER = json.load(fh)
+            except Exception as e:
+                eprint('ERROR loading user map={}'.format(USER_FILTER_FILE))
+                sys.exit(1)
 
-        self.CLIENT_FILTER_FILE = self.config['client_filter_file']
-        try:
-            with open(self.CLIENT_FILTER_FILE) as fh:
-               self.CLIENT_FILTER = json.load(fh)
-        except Exception as e:
-            eprint('ERROR loading map={}, initializing'.format(self.CLIENT_FILTER_FILE))
-            self.CLIENT_FILTER = {}
+        CLIENT_FILTER_FILE = self.config.get('client_filter_file')
+        self.CLIENT_FILTER = None
+        if CLIENT_FILTER_FILE:
+            try:
+                with open(CLIENT_FILTER_FILE) as fh:
+                   self.CLIENT_FILTER = json.load(fh)
+            except Exception as e:
+                eprint('ERROR loading client map={}'.format(CLIENT_FILTER_FILE))
+                sys.exit(1)
 
         # Convert client filters into networks
         self.CLIENT_NETS = {}
@@ -89,16 +93,16 @@ class Filter():
         csv_writer = csv.DictWriter(sys.stdout, fieldnames=csv_reader._fieldnames, delimiter=',', quotechar='|')
         csv_writer.writeheader()
         for row in csv_reader:
-            row1 = self.filter_action_simple(row, 'USE_USER', self.USER_FILTER)
-            if not row1:
-                continue
-            row2 = self.filter_action_subnet(row1, 'USE_CLIENT', self.CLIENT_FILTER)
-            if not row2:
-                continue
-            row3 = self.filter_action_cilogon_use_client(row2, 'USE_CLIENT')
-            if not row3:
-                continue
-            csv_writer.writerow(row3)
+            if self.USER_FILTER:
+                row = self.filter_action_simple(row, 'USE_USER', self.USER_FILTER)
+                if not row: continue
+            if self.CLIENT_FILTER:
+                row = self.filter_action_subnet(row, 'USE_CLIENT', self.CLIENT_FILTER)
+                if not row: continue
+            if self.CILOGON_USE_CLIENT:
+                row = self.filter_action_cilogon_use_client(row, 'USE_CLIENT')
+                if not row: continue
+            csv_writer.writerow(row)
 
         fd.close()
 
@@ -154,10 +158,9 @@ class Filter():
     # Custom filter for cilogon use_client
     ##########################################################################
     def filter_action_cilogon_use_client(self, row, field):
-        if self.CILOGON_USE_CLIENT:
-            client = row.get(field,'')
-            if client.lower() not in ('ecp', 'pkcs12', ''):
-                row[field] = 'OAUTH_client_name:{}'.format(client)
+        client = row.get(field,'')
+        if client.lower() not in ('ecp', 'pkcs12', ''):
+            row[field] = 'OAUTH_client_name:{}'.format(client)
         return(row)
 
     def finish(self):
