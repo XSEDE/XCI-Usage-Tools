@@ -82,8 +82,16 @@ class Filter():
             fd = sys.stdin
         
         csv_reader = csv.DictReader(fd, delimiter=',', quotechar='|')
-        if not csv_reader.fieldnames or 'USED_COMPONENT' not in csv_reader.fieldnames:
-            eprint('ERROR file is missing CSV fields: {}'.format(file_name))
+        if not csv_reader.fieldnames:
+            if csv_reader.line_num == 0:
+                eprint('INFO: Input file empty')
+                sys.exit(0)
+            else:
+                eprint('ERROR: Input file is missing CSV fields in first row')
+                sys.exit(1)
+
+        if 'USED_COMPONENT' not in csv_reader.fieldnames:
+            eprint('ERROR: File is missing USED_COMPONENT field: {}'.format(file_name))
             fd.close()
             return
         csv_writer = csv.DictWriter(sys.stdout, fieldnames=csv_reader._fieldnames, delimiter=',', quotechar='|')
