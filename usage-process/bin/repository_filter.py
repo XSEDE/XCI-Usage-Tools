@@ -23,6 +23,7 @@ class Filter():
     def __init__(self):
         # Variales that must be defined
         self.IN_FD = None
+        self.OUT_WRITER = None
         self.ROWS_BEFORE = 0
         self.ROWS_AFTER = 0
 
@@ -156,7 +157,7 @@ class Filter():
         self.end_ts = datetime.utcnow()
         seconds = (self.end_ts - self.start_ts).total_seconds()
         rate = self.ROWS_BEFORE / seconds
-        self.logger.info('Read {}/rows wrote {}/rows in seconds={} rate={} rows/second'.format(
+        self.logger.info('read {}/rows wrote {}/rows in seconds={} rate={} rows/second'.format(
             self.ROWS_BEFORE, self.ROWS_AFTER, round(seconds, 2), round(rate, 0) ))
 
     ##########################################################################
