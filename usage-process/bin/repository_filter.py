@@ -40,11 +40,6 @@ class Filter():
             eprint('ERROR "{}" parsing config={}'.format(e, config_path))
             sys.exit(1)
 
-        for c in ['user_filter_file', 'client_filter_file']:
-            if not self.config.get(c, None):
-                eprint('Missing config "{}"'.format(c))
-                sys.exit(1)
-
         USER_FILTER_FILE = self.config.get('user_filter_file')
         self.USER_FILTER = None
         if USER_FILTER_FILE:
