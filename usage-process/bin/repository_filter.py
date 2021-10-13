@@ -62,12 +62,13 @@ class Filter():
 
         # Convert client filters into networks
         self.CLIENT_NETS = {}
-        for cidr in self.CLIENT_FILTER:
-            if '/' in cidr:
-                netstr, bits = cidr.split('/')
-                mask = (0xffffffff << (32 - int(bits))) & 0xffffffff
-                net = ip_to_u32(netstr) & mask
-                self.CLIENT_NETS[cidr] = (mask, net)
+        if self.CLIENT_FILTER:
+            for cidr in self.CLIENT_FILTER:
+                if '/' in cidr:
+                    netstr, bits = cidr.split('/')
+                    mask = (0xffffffff << (32 - int(bits))) & 0xffffffff
+                    net = ip_to_u32(netstr) & mask
+                    self.CLIENT_NETS[cidr] = (mask, net)
 
         self.CILOGON_USE_CLIENT = self.config.get('cilogon_use_client')
         
