@@ -59,7 +59,7 @@ if __name__ == '__main__':
             continue
 
         o = {}
-        o['USED_COMPONENT']         = 'login.xsede.org'
+        o['USED_COMPONENT']         = 'org.xsede.login'
 
         o['USED_COMPONENT_VERSION'] = None
 
