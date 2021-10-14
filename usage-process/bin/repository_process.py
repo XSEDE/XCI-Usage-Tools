@@ -114,23 +114,22 @@ class RepositoryProcess():
             'entries': 0
         }
 
-        SOURCE_DIR = self.config.get('source_dir', None)
-        if not os.path.isdir(SOURCE_DIR):
-            self.logger.error('ERROR config source_dir={} is not a directory'.format(SOURCE_DIR))
-            self.exit(1)
+        SOURCE_DIRS = [d for d in self.config.get('source_dir', '').split(',') if d]
         SOURCE_GLOB = self.config.get('source_glob', '*')
-        files = [f for f in fnmatch.filter(os.listdir(SOURCE_DIR), SOURCE_GLOB) if os.path.isfile(os.path.join(SOURCE_DIR, f))]
-        if len(files) == 0:
-            self.logger.warning('WARNING no files in source_dir={} match source_glob={}'.format(SOURCE_DIR, SOURCE_GLOB))
-            self.exit(1)
-
-        self.FILES = {}
-        for f in files:
-            self.FILES[f] = os.path.join(SOURCE_DIR, f)
+        self.IN_FILES = {}          # key=filename, value=fully qualified file
+        for DIR in SOURCE_DIRS:
+            if not os.path.isdir(DIR):
+                self.logger.error('Specified source_dir={} is not a directory'.format(DIR))
+                self.exit(1)
+            files = [file for file in fnmatch.filter(os.listdir(DIR), SOURCE_GLOB) if os.path.isfile(os.path.join(DIR, file))]
+            if len(files) == 0:
+                self.logger.warning('Specified source_dir={} has no files that match source_glob={}'.format(DIR, SOURCE_GLOB))
+            for f in files:
+                self.IN_FILES[f] = os.path.join(DIR, f)
 
         self.TARGET_DIR = self.config.get('target_dir', None)
         if not os.path.isdir(self.TARGET_DIR):
-            self.logger.error('ERROR config target_dir={} is not a directory'.format(self.TARGET_DIR))
+            self.logger.error('Specified target_dir={} is not a directory'.format(self.TARGET_DIR))
             self.exit(1)
         self.TARGET_EXTENSION = self.config.get('target_extension', None)
 
@@ -198,8 +197,8 @@ if __name__ == '__main__':
     try:
         with PidFile(process.pidfile_path):
             process.Setup()
-            for file in sorted(process.FILES):
-                rc = process.process_file(file, process.FILES[file])
+            for file in sorted(process.IN_FILES):
+                rc = process.process_file(file, process.IN_FILES[file])
     except PidFileError:
         process.logger.critical('Pidfile lock error: {}'.format(process.pidfile_path))
         sys.exit(1)

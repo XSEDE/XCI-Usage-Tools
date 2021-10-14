@@ -25,8 +25,8 @@ class Filter():
         # Variales that must be defined
         self.IN_FD = None
         self.OUT_FD = None
-        self.ROWS_BEFORE = 0
-        self.ROWS_AFTER = 0
+        self.IN_ROWS = 0
+        self.OUT_ROWS = 0
 
         parser = argparse.ArgumentParser()
         parser.add_argument('file', nargs='?')
@@ -53,26 +53,21 @@ class Filter():
 
     def Setup(self):
         # Initialize logging from arguments or config file, with WARNING level as default
-        numeric_log = None
-        if self.args.log is not None:
-            numeric_log = getattr(logging, self.args.log.upper(), None)
-        if numeric_log is None and self.config.get('LOG_LEVEL'):
-            numeric_log = getattr(logging, self.config['LOG_LEVEL'].upper(), None)
-        if numeric_log is None:
-            numeric_log = getattr(logging, 'WARNING', None)
-        if not isinstance(numeric_log, int):
-            raise ValueError('Invalid log level: {}'.format(numeric_log))
+        loglevel_string = (self.args.log or self.config.get('LOG_LEVEL') or 'WARNING').upper()
+        loglevel_number = getattr(logging, loglevel_string, None)
+        if not isinstance(loglevel_number, int):
+            raise ValueError('Invalid log level={}'.format(loglevel_number)
         self.logger = logging.getLogger('DaemonLog')
-        self.logger.setLevel(numeric_log)
-        program = os.path.basename(__file__)
-        self.formatter = logging.Formatter(fmt='%(asctime)s.%(msecs)03d %(levelname)s {} %(message)s'.format(program),
+        self.logger.setLevel(loglevel_number)
+        PROGRAM = os.path.basename(__file__)
+        self.formatter = logging.Formatter(fmt='%(asctime)s.%(msecs)03d %(levelname)s {} %(message)s'.format(PROGRAM),
                                            datefmt='%Y/%m/%d %H:%M:%S')
         
-        LOGFILE = self.config.get('LOG_FILE', 'stdout')
-        if LOGFILE.lower() == 'stdout':
+        LOG_FILE = self.config.get('LOG_FILE', 'stdout')
+        if LOG_FILE.lower() == 'stdout':
             self.handler = logging.StreamHandler(sys.stdout)
         else:
-            self.handler = logging.FileHandler(self.config['LOG_FILE'])
+            self.handler = logging.FileHandler(LOG_FILE)
         self.handler.setFormatter(self.formatter)
         self.logger.addHandler(self.handler)
 
@@ -88,8 +83,8 @@ class Filter():
                 with open(COMPONENT_FILTER_FILE) as fh:
                    self.COMPONENT_FILTER = json.load(fh)
             except Exception as e:
-                self.logger.error('Loading user map={}'.format(COMPONENT_FILTER_FILE))
-                sys.exit(1)
+                self.logger.error('{} loading file={}'.format(e, COMPONENT_FILTER_FILE))
+                self.exit(1)
 
         USER_FILTER_FILE = self.config.get('user_filter_file')
         self.USER_FILTER = None
@@ -98,8 +93,8 @@ class Filter():
                 with open(USER_FILTER_FILE) as fh:
                    self.USER_FILTER = json.load(fh)
             except Exception as e:
-                self.logger.error('Loading user map={}'.format(USER_FILTER_FILE))
-                sys.exit(1)
+                self.logger.error('{} loading user map={}'.format(e, USER_FILTER_FILE))
+                self.exit(1)
 
         CLIENT_FILTER_FILE = self.config.get('client_filter_file')
         self.CLIENT_FILTER = None
@@ -108,31 +103,58 @@ class Filter():
                 with open(CLIENT_FILTER_FILE) as fh:
                    self.CLIENT_FILTER = json.load(fh)
             except Exception as e:
-                self.logger.error('Loading client map={}'.format(CLIENT_FILTER_FILE))
-                sys.exit(1)
+                self.logger.error('{} loading client map={}'.format(e, CLIENT_FILTER_FILE))
+                self.exit(1)
 
         # Convert client filters into networks
         self.CLIENT_NETS = {}
-        if self.CLIENT_FILTER:
-            for cidr in self.CLIENT_FILTER:
-                if '/' in cidr:
-                    netstr, bits = cidr.split('/')
-                    mask = (0xffffffff << (32 - int(bits))) & 0xffffffff
-                    net = ip_to_u32(netstr) & mask
-                    self.CLIENT_NETS[cidr] = (mask, net)
+        for cidr in self.CLIENT_FILTER:
+            if '/' in cidr:
+                netstr, bits = cidr.split('/')
+                mask = (0xffffffff << (32 - int(bits))) & 0xffffffff
+                net = ip_to_u32(netstr) & mask
+                self.CLIENT_NETS[cidr] = (mask, net)
 
         self.CILOGON_USE_CLIENT = self.config.get('cilogon_use_client')
 
-        USED_RESOURCE_REGEXS_CONFIG = self.config.get('used_resource_regexs')
-        self.USED_RESOURCE_REGEXS = list()
-        if USED_RESOURCE_REGEXS_CONFIG:
-            # Pre-compile all the regular expressions
-            for REGEX = USED_RESOURCE_REGEXS_CONFIG:
-                try:
-                    self.USED_RESOURCE_REGEXS.append(re.compile(REGEX))
-                except:
-                    self.logger.error('used_resource_regexs compile failed: {}'.format(REGEX))
-                    self.exit(1)
+        REGEX_FILTER_FILE = self.config.get('regex_filter_file')
+        if REGEX_FILTER_FILE:
+            try:
+                with open(REGEX_FILTER_FILE) as fh:
+                   REGEX_FILTER_CONF = json.load(fh)
+            except Exception as e:
+                self.logger.error('{} loading regex_filter_file={}'.format(e, REGEX_FILTER_FILE))
+                self.exit(1)
+        # Convert from {<fld1>: [<fld1reg1>, !<fld1reg2>], <fld2> ...]
+        #           to {True: {<fld1>: [<fld1reg1>]},
+        #              {False: {<fld1>: [<fld1reg2>]}
+        # ALL regex must be true for a row to match
+        self.REGEX_FILTERS = {}
+        try:
+            for FLD, REGEXS in REGEX_FILTER_CONF.items():
+                for REGEX in REGEXS:
+                    if REGEX[0:1] == '!':
+                        REGEX = REGEX[1:]
+                        MATCH = False 
+                    else:
+                        MATCH = True
+                    if MATCH not in self.REGEX_FILTERS: self.REGEX_FILTERS[MATCH] = {}
+                    if FLD not in self.REGEX_FILTERS[MATCH]: self.REGEX_FILTERS[MATCH][FLD] = list()
+                    self.REGEX_FILTERS[MATCH][FLD].append(re.compile(REGEX))
+        except:
+            self.logger.error('Compiling regex_filter_file reg: {}'.format(REGEX))
+            self.exit(1)
+
+#       USED_RESOURCE_REGEXS_CONFIG = self.config.get('used_resource_regexs')
+#       self.USED_RESOURCE_REGEXS = list()
+#       if USED_RESOURCE_REGEXS_CONFIG:
+#           # Pre-compile all the regular expressions
+#           for REGEX in USED_RESOURCE_REGEXS_CONFIG:
+#               try:
+#                   self.USED_RESOURCE_REGEXS.append(re.compile(REGEX))
+#               except:
+#                   self.logger.error('used_resource_regexs compile failed: {}'.format(REGEX))
+#                   self.exit(1)
 
         if self.args.file:
             if self.args.file[-3:] == '.gz':
@@ -152,19 +174,24 @@ class Filter():
                 self.exit(1)
 
         if 'USED_COMPONENT' not in self.IN_READER.fieldnames:
-            self.logger.error('File is missing USED_COMPONENT field: {}'.format(self.args.file))
+            self.logger.error('Input file is missing field=USED_COMPONENT')
             self.exit(1)
 
+        for M in (True, False):
+            if M not in self.REGEX_FILTERS: continue
+            for F in self.REGEX_FILTERS[M]:
+                if F not in self.IN_READER.fieldnames:
+                    self.logger.error('Input file is missing REGEX field={}'.format(F))
+                    self.exit(1)
+                
         self.OUT_FD = sys.stdout
         self.OUT_WRITER = csv.DictWriter(self.OUT_FD, fieldnames=self.IN_READER._fieldnames, delimiter=',', quotechar='|')
         self.OUT_WRITER.writeheader()
 
     def Process(self):
         self.start_ts = datetime.utcnow()
-        INPUT = self.IN_READER
-        OUTPUT = self.OUT_WRITER
-        for row in INPUT:
-            self.ROWS_BEFORE += 1
+        for row in self.IN_READER:
+            self.IN_ROWS += 1
             if self.COMPONENT_FILTER:
                 row = self.filter_action_simple(row, 'USED_COMPONENT', self.COMPONENT_FILTER)
                 if not row: continue
@@ -177,17 +204,18 @@ class Filter():
             if self.CILOGON_USE_CLIENT:
                 row = self.filter_action_cilogon_use_client(row, 'USE_CLIENT')
                 if not row: continue
-            if self.USED_RESOURCE_REGEXS:
-                row = self.filter_action_regexs(row, 'USED_RESOURCE', self.USED_RESOURCE_REGEXS)
+#           if self.USED_RESOURCE_REGEXS:
+#               row = self.filter_action_regexs(row, 'USED_RESOURCE', self.USED_RESOURCE_REGEXS)
+            if self.REGEX_FILTERS:
+                row = self.filter_action_regexs(row, self.REGEX_FILTERS)
                 if not row: continue
-            OUTPUT.writerow(row)
-            self.ROWS_AFTER += 1
+            self.OUT_WRITER.writerow(row)
+            self.OUT_ROWS += 1
 
         self.end_ts = datetime.utcnow()
         seconds = (self.end_ts - self.start_ts).total_seconds()
-        rate = self.ROWS_BEFORE / seconds
-        self.logger.info('read {}/rows wrote {}/rows in seconds={} rate={} rows/second'.format(
-            self.ROWS_BEFORE, self.ROWS_AFTER, round(seconds, 2), round(rate, 0) ))
+        self.logger.info('in={}/rows out={}/rows seconds={} in_rows/second={} '.format(
+            self.IN_ROWS, self.OUT_ROWS, round(seconds, 2), round(self.IN_ROWS / seconds, 0) ))
 
     ##########################################################################
     # Simple filter based on exact field match
@@ -212,8 +240,7 @@ class Filter():
             action = filter_rules[row[field]]
             action_fields = action.split(':', 1)        # Actions are "DELETE", "MAP:<replacement_value>"
             command = action_fields[0].lower()
-            if command == 'delete':
-                return(None)  
+            if command == 'delete': return(None)  
             if command == 'map':
                 row[field] = action_fields[1]
             return(row)
@@ -247,11 +274,18 @@ class Filter():
     ##########################################################################
     # Complex multiple regex matching filter
     ##########################################################################
-    def filter_action_regexs(self, row, field, filter_regexs):
-        val = row.get(field, '')
-        for regex in filter_regexs:
-            match = re.search(regex, val)
-            if not match: return(None)
+#   def filter_action_regexs(self, row, field, filter_regexs):
+#       val = row.get(field, '')
+#       for regex in filter_regexs:
+#           match = re.search(regex, val)
+#           if not match: return(None)
+    def filter_action_regexs(self, row, filter_regexs):
+        for WANT_MATCH, NEGDICT in filter_regexs.items():
+            for FLD, REGEXS in NEGDICT.items():
+                VAL = row.get(FLD, '')
+                for REGEX in REGEXS:
+                    match = re.search(REGEX, VAL)
+                    if bool(match) != WANT_MATCH: return(None)
         return(row)
 
     ##########################################################################
