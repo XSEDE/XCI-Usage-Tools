@@ -1,3 +1,4 @@
+1.12-1 Fix info_apache_parser.py.in COMPONENT
 1.11-1 Add ssohub_parser.py to parse sso hub (login.xsede.org) audit usage records
 1.10-1 Don't rotate rabbitmq_merge log because rabbitmq is already lograting /var/log/rabbitmq/*.log
 1.9-1  Remove decode('utf-8') which isn't needed in Python3
