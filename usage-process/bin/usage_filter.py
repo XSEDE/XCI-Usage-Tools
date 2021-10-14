@@ -181,11 +181,11 @@ class Filter():
             self.logger.error('Input file is missing field=USED_COMPONENT')
             self.exit(1)
 
-        for M in (True, False):
-            if M not in self.REGEX_FILTERS: continue
-            for F in self.REGEX_FILTERS[M]:
-                if F not in self.IN_READER.fieldnames:
-                    self.logger.error('Input file is missing REGEX field={}'.format(F))
+        for MATCH in (True, False):
+            if MATCH not in self.REGEX_FILTERS: continue
+            for FLD in self.REGEX_FILTERS[MATCH]:
+                if FLD not in self.IN_READER.fieldnames:
+                    self.logger.error('Input file is missing REGEX field={}'.format(FLD))
                     self.exit(1)
                 
         self.OUT_FD = sys.stdout
