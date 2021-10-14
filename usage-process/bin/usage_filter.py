@@ -76,7 +76,7 @@ class Filter():
 
         self.logger.debug('Starting pid={}, uid={}({})'.format(os.getpid(), os.geteuid(), pwd.getpwuid(os.geteuid()).pw_name))
 
-        COMPONENT_FILTER_FILE = self.config.get('user_filter_file')
+        COMPONENT_FILTER_FILE = self.config.get('component_filter_file')
         self.COMPONENT_FILTER = None
         if COMPONENT_FILTER_FILE:
             try:
