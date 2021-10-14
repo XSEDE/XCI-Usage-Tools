@@ -126,6 +126,9 @@ class Filter():
             except Exception as e:
                 self.logger.error('{} loading regex_filter_file={}'.format(e, REGEX_FILTER_FILE))
                 self.exit(1)
+        else:
+            REGEX_FILTER_CONF = {}
+
         # Convert from {<fld1>: [<fld1reg1>, !<fld1reg2>], <fld2> ...]
         #           to {True: {<fld1>: [<fld1reg1>]},
         #              {False: {<fld1>: [<fld1reg2>]}
