@@ -40,7 +40,7 @@ if __name__ == '__main__':
     input = input_fd
     output = csv.writer(sys.stdout, delimiter=',', quotechar='|')
 
-    COMPONENT = 'org.xsede.rsp'
+    COMPONENT = 'org.xsede.info'
     
     matches = 0
     for line in input:
