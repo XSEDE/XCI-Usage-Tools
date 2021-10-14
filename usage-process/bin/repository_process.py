@@ -90,8 +90,8 @@ class RepositoryProcess():
         except IOError as e:
             self.logger.error('IO Error loading status={}, initializing'.format(self.config['file_status_file']))
             self.FILE_STATUS = {}
-        except json.JSONDecodeError(msg, doc, pos):
-            self.logger.error('JSON error "{}", in "{}" at "{}", QUITTING'.format(msg, doc, pos))
+        except json.JSONDecodeError as e:
+            self.logger.error('Status file json error "{}", QUITTING'.format(e))
             self.exit(1)
 
         self.STEPS = {}
@@ -201,6 +201,9 @@ if __name__ == '__main__':
                 rc = process.process_file(file, process.IN_FILES[file])
     except PidFileError:
         process.logger.critical('Pidfile lock error: {}'.format(process.pidfile_path))
+        sys.exit(1)
+    except Exception as e:
+        process.logger.critical('Setup exception={}'.format(e))
         sys.exit(1)
     end_utc = datetime.now(utc)
     process.logger.info("Processed files={}, seconds={}, skipped={}, errors={}".format(

@@ -56,7 +56,7 @@ class Filter():
         loglevel_string = (self.args.log or self.config.get('LOG_LEVEL') or 'WARNING').upper()
         loglevel_number = getattr(logging, loglevel_string, None)
         if not isinstance(loglevel_number, int):
-            raise ValueError('Invalid log level={}'.format(loglevel_number)
+            raise ValueError('Invalid log level={}'.format(loglevel_number))
         self.logger = logging.getLogger('DaemonLog')
         self.logger.setLevel(loglevel_number)
         PROGRAM = os.path.basename(__file__)
@@ -108,12 +108,13 @@ class Filter():
 
         # Convert client filters into networks
         self.CLIENT_NETS = {}
-        for cidr in self.CLIENT_FILTER:
-            if '/' in cidr:
-                netstr, bits = cidr.split('/')
-                mask = (0xffffffff << (32 - int(bits))) & 0xffffffff
-                net = ip_to_u32(netstr) & mask
-                self.CLIENT_NETS[cidr] = (mask, net)
+        if self.CLIENT_FILTER:
+            for cidr in self.CLIENT_FILTER:
+                if '/' in cidr:
+                    netstr, bits = cidr.split('/')
+                    mask = (0xffffffff << (32 - int(bits))) & 0xffffffff
+                    net = ip_to_u32(netstr) & mask
+                    self.CLIENT_NETS[cidr] = (mask, net)
 
         self.CILOGON_USE_CLIENT = self.config.get('cilogon_use_client')
 
