@@ -13,7 +13,7 @@ import sys
 # All possible output fields
 #   Required:     'USED_COMPONENT', 'USE_TIMESTAMP', 'USE_CLIENT',
 #   Recommended:  'USE_USER', 'USED_COMPONENT_VERSION', 'USED_RESOURCE'
-#   Optional:     'USAGE_STATUS'
+#   Optional:     'USAGE_STATUS', 'USE_AMOUNT', 'USE_AMOUNT_UNITS'
 
 #==== CUSTOMIZATION VARIABLES ====================
 
