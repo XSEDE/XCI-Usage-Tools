@@ -19,7 +19,7 @@ import re
 #==== CUSTOMIZATION VARIABLES ====================
 
 # Parsing regular expression
-LOG_REGEX = '\[(?P<date>.*?)\] (?P<ip>[(\d\.)]+) - (?P<user>\S+) "(?P<method>\w+) (?P<request_path>.*?) HTTP/(?P<http_version>.*?)" (?P<status_code>\d+) (?P<response_size>\S+?)( "(?P<referrer>.*?)" "(?P<user_agent>.*?)" )?'
+LOG_REGEX = '\[(?P<date>.*?)\] (?P<ip>[(\d\.)]+) (?P<microseconds>\S+) (?P<user>\S+) "(?P<method>\w+) (?P<request_path>.*?) HTTP/(?P<http_version>.*?)" (?P<status_code>\d+) (?P<response_size>\S+?)( "(?P<referrer>.*?)" "(?P<user_agent>.*?)" )?'
 compiled = re.compile(LOG_REGEX)
 
 #==== END OF CUSTOMIZATIONS ====================
@@ -35,12 +35,16 @@ if __name__ == '__main__':
         input_fd = sys.stdin
 
 # The fields we are generating
-    OUTPUT_FIELDS = ['USED_COMPONENT', 'USE_TIMESTAMP', 'USE_CLIENT', 'USE_USER', 'USED_RESOURCE', 'USAGE_STATUS']
+    OUTPUT_FIELDS = ['USED_COMPONENT', 'USE_TIMESTAMP', 'USE_CLIENT', 'USE_USER', 'USED_RESOURCE', 'USAGE_STATUS', 'USE_AMOUNT', 'USE_AMOUNT_UNITS']
 
     input = input_fd
     output = csv.writer(sys.stdout, delimiter=',', quotechar='|')
 
-    COMPONENT = 'org.xsede.info'
+    TEMPLATE = {'USED_COMPONENT': 'org.xsede.info',
+                'USED_COMPONENT_VERSION': None,
+                'USE_AMOUNT': None,
+                'USE_AMOUNT_UNITS': None
+               }
     
     matches = 0
     for line in input:
@@ -48,10 +52,7 @@ if __name__ == '__main__':
         if not match:
             continue
 
-        o = {}
-        o['USED_COMPONENT']         = COMPONENT
-
-        o['USED_COMPONENT_VERSION'] = None
+        o = TEMPLATE.copy()
 
         date_parse = datetime.strptime(match.group('date'), "%d/%b/%Y:%H:%M:%S %z").astimezone(tz=timezone.utc)
         o['USE_TIMESTAMP']          = date_parse.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -73,6 +74,10 @@ if __name__ == '__main__':
         o['USED_RESOURCE']          = '{} {}'.format(match.group('method'), match.group('request_path'))
 
         o['USAGE_STATUS']           = '{} {}'.format(match.group('status_code'), match.group('response_size'))
+
+        if match.group('microseconds').isdigit():
+            o['USE_AMOUNT'] = match.group('microseconds')
+            o['USE_AMOUNT_UNITS'] = '\u00b5s'    # Microseconds: Unicode mu/micro \u00b5 plus 's'
 
         # PLACE FILTER CODE HERE 
         # if <filter_expression>:
