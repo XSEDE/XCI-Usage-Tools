@@ -124,7 +124,7 @@ class ReportErrors():
                 self.LOGFILES.append(os.path.join(DIR, f))
 
     def Process_Logfile(self, file_fqn):
-        self.STATS.update('files')
+        self.STATS.update(['files'])
         with open(file_fqn, 'r') as IN_FILE:
             for line in IN_FILE:
                 match = self.REGCOMP.match(line)
@@ -137,7 +137,7 @@ class ReportErrors():
                     continue
                 if match.group('level') in ['INFO']:
                     continue
-                self.STATS.update('errors')
+                self.STATS.update(['errors'])
                 if file_fqn not in self.ERRORS:
                     self.ERRORS[file_fqn] = []
                 self.ERRORS[file_fqn].append(line)
