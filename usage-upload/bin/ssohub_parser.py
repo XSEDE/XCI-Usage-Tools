@@ -90,7 +90,7 @@ if __name__ == '__main__':
 
         match_user = msg_dict.get('acct')
         if match_user:
-            o['USE_USER']           = 'local:' + match_user
+            o['USE_USER']           = 'xsede:' + match_user
         else:
             o['USE_USER']           = ''
 

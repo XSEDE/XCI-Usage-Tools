@@ -1,3 +1,4 @@
+1.14-1 Fix ssohub_parser.py to record all users as "xsede:<username>"
 1.13-1 Enhance info_apache_parser.py.in to process the %D (microseconds to serve request) replacement of obsolete %l (remote logname from identd) in the access log
 1.12-1 Fix info_apache_parser.py.in COMPONENT
 1.11-1 Add ssohub_parser.py to parse sso hub (login.xsede.org) audit usage records
