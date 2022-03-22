@@ -1,3 +1,5 @@
+# ORIGINAL SETUP FOLLOWS
+# AS OF 2022 the deployment /soft/usage-process/ directory is now /soft/XCI-Usage-Tools/PROD/usage-process/
 # created /soft/usage-process/skel with  .ssh/
 semanage fcontext -a -t ssh_home_t "/soft/usage-process/skel/.ssh(/.*)"
 restorecon -Rv "/soft/usage-process/skel/.ssh/"
@@ -17,3 +19,4 @@ Executed
 /soft/usage-process/sbin/setup_incoming_account.sh -l info4  -d "info4.dyn.xsede.org upload account"  -k
 /soft/usage-process/sbin/setup_incoming_account.sh -l ssohub -d "login.xsede.org upload account" -k
 /soft/usage-process/sbin/setup_incoming_account.sh -l csr -d "software.xsede.org upload account" -k
+
