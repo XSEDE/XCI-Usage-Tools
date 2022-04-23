@@ -3,7 +3,7 @@
 import argparse
 import csv
 import datetime
-from datetime import datetime, tzinfo, timedelta
+from datetime import datetime, tzinfo, timedelta, timezone
 import fnmatch
 import gzip
 import json
@@ -17,14 +17,14 @@ import sys
 import pdb
 from stat import *
 
-class UTC(tzinfo):
-    def utcoffset(self, dt):
-        return timedelta(0)
-    def tzname(self, dt):
-        return 'UTC'
-    def dst(self, dt):
-        return timedelta(0)
-utc = UTC()
+#class UTC(tzinfo):
+#    def utcoffset(self, dt):
+#        return timedelta(0)
+#    def tzname(self, dt):
+#        return 'UTC'
+#    def dst(self, dt):
+#        return timedelta(0)
+#utc = UTC()
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -136,7 +136,7 @@ class RepositoryProcess():
     def process_file(self, file_name, file_fqn):
         this_history = self.FILE_STATUS.get(file_fqn, {})
         input_stat = os.stat(file_fqn)
-        input_mtime_str = str(datetime.fromtimestamp(input_stat.st_mtime))
+        input_mtime_str = str(datetime.fromtimestamp(input_stat.st_mtime, tz=timezone.utc))
         newext = getattr(self, 'TARGET_EXTENSION')
         if not newext:
             newext = ''
@@ -174,7 +174,7 @@ class RepositoryProcess():
         output_stat = os.stat(out_file_fqn)
         this_history['output'] = out_file_fqn
         this_history['out_size'] = output_stat.st_size
-        this_history['out_mtime'] = str(datetime.fromtimestamp(output_stat.st_mtime))
+        this_history['out_mtime'] = str(datetime.fromtimestamp(output_stat.st_mtime, tz=timezone.utc))
         self.FILE_STATUS[file_fqn] = this_history
         self.save_status()
 
@@ -191,7 +191,7 @@ class RepositoryProcess():
         sys.exit(rc)
 
 if __name__ == '__main__':
-    start_utc = datetime.now(utc)
+    start_utc = datetime.now(timezone.utc)
     process = RepositoryProcess()
     process.Setup_Logging()
     try:
@@ -205,7 +205,7 @@ if __name__ == '__main__':
     except Exception as e:
         process.logger.critical('Setup exception={}'.format(e))
         sys.exit(1)
-    end_utc = datetime.now(utc)
+    end_utc = datetime.now(timezone.utc)
     process.logger.info("Processed files={}, seconds={}, skipped={}, errors={}".format(
         process.stats['processed'], (end_utc - start_utc).total_seconds(), 
         process.stats['skipped'], process.stats['errors']))
