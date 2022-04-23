@@ -116,7 +116,7 @@ class Filter():
                     net = ip_to_u32(netstr) & mask
                     self.CLIENT_NETS[cidr] = (mask, net)
 
-        self.CILOGON_USE_CLIENT = self.config.get('cilogon_use_client').lower() == 'true'
+        self.CILOGON_USE_CLIENT = self.config.get('cilogon_use_client','').lower() == 'true'
 
         REGEX_FILTER_FILE = self.config.get('regex_filter_file')
         if REGEX_FILTER_FILE:
