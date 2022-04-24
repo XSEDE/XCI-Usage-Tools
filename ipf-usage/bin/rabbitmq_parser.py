@@ -5,22 +5,19 @@
 # Input:  text <input_file> or stdin, accept gzip'ed (.gz) <input_file>
 # Output: stdout in CSV
 ###############################################################################
-from datetime import datetime
+from datetime import datetime, timezone
 import csv
 import gzip
-import pytz
 import re
 import sys
 
 # All possible output fields
 #   Required:     'USED_COMPONENT', 'USE_TIMESTAMP', 'USE_CLIENT',
 #   Recommended:  'USE_USER', 'USED_COMPONENT_VERSION', 'USED_RESOURCE'
-#   Optional:     'USAGE_STATUS'
+#   Optional:     'USAGE_STATUS', 'USE_AMOUNT', 'USE_AMOUNT_UNITS'
 
 #==== CUSTOMIZATION VARIABLES ====================
 
-INPUT_TZ = 'US/Central'                        # One of pytz.common_timezones
-INPUT_DATE_FORMAT = '%Y-%m-%d %H:%M:%S.%f'     # A datetime.strptime format
 # The fields we are generating
 OUTPUT_FIELDS = ['USED_COMPONENT', 'USE_TIMESTAMP', 'USE_CLIENT', 'USE_USER']
 
@@ -58,8 +55,8 @@ if __name__ == '__main__':
 
         o['USED_COMPONENT_VERSION'] = None
 
-        dtm = datetime.strptime(match_line.group(1).strip(), INPUT_DATE_FORMAT)
-        o['USE_TIMESTAMP']          = pytz.timezone(INPUT_TZ).localize(dtm).astimezone(pytz.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        dtm = datetime.fromisoformat(match_line.group(1).strip())
+        o['USE_TIMESTAMP']          = dtm.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
         match_ip = re.search(REGEX_IP, match_line.group(3))
         if match_ip:
