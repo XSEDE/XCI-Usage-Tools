@@ -6,8 +6,8 @@
 MY_BASE="%PREFIX%"
 source ${MY_BASE}/python/bin/activate
 
-${MY_BASE}/PROD/usage-upload/bin/upload_glue2.sh glue2.compute                >>${MY_BASE}/var/glue2.compute.log
-${MY_BASE}/PROD/usage-upload/bin/upload_glue2.sh glue2.applications           >>${MY_BASE}/var/glue2.applications.log
-${MY_BASE}/PROD/usage-upload/bin/upload_glue2.sh glue2.computing_activities   >>${MY_BASE}/var/glue2.computing_activities.log
+${MY_BASE}/bin/upload_glue2.sh glue2.compute                >>${MY_BASE}/var/glue2.compute.log
+${MY_BASE}/bin/upload_glue2.sh glue2.applications           >>${MY_BASE}/var/glue2.applications.log
+${MY_BASE}/bin/upload_glue2.sh glue2.computing_activities   >>${MY_BASE}/var/glue2.computing_activities.log
 
-${MY_BASE}/PROD/usage-upload/bin/upload_usage.py -l info -c ${MY_BASE}/etc/upload_glue2.conf
+${MY_BASE}/bin/upload_usage.py -l info -c ${MY_BASE}/etc/upload_glue2.conf

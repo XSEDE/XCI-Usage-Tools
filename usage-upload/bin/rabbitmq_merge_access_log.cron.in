@@ -7,4 +7,4 @@ MY_BASE="%PREFIX%"
 export LD_LIBRARY_PATH="%LD_LIBRARY_PATH%"
 source ${MY_BASE}/python/bin/activate
 
-${MY_BASE}/PROD/usage-upload/bin/rabbitmq_merge_access_log.py -l info
+${MY_BASE}/bin/rabbitmq_merge_access_log.py -l info
