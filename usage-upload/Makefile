@@ -2,7 +2,7 @@
 VER= $(shell cat VERSION)
 REL= $(shell cat RELEASE)
 SHELL= /bin/bash
-PYTHON ?= python
+PYTHON ?= python3
 PREFIX ?= /usr/local/usage-upload
 
 BUNDLE_NAME= usage-upload-$(VER)-$(REL)
