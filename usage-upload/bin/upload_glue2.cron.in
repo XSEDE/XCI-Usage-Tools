@@ -4,6 +4,7 @@
 ###############################################################################
 
 MY_BASE="%PREFIX%"
+export LD_LIBRARY_PATH="%LD_LIBRARY_PATH%"
 source ${MY_BASE}/python/bin/activate
 
 ${MY_BASE}/bin/upload_glue2.sh glue2.compute                >>${MY_BASE}/var/glue2.compute.log
