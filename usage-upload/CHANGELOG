@@ -1,3 +1,4 @@
+1.14-8 Fix usage-upload Makefile not setting perms on usage_splitter.py, usage_sync.py
 1.14-7 Add missing LD_LIBRARY_PATH to cron scripts
 1.14-6 Fix paths used in cron scripts
 1.14-5 Fix rabbitmq_parser.py handling log entry timestamps to be more flexible
