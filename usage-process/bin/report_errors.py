@@ -145,7 +145,7 @@ class ReportErrors():
     def MailErrors(self):
         if not self.ERRORS: return
         MSG = "Subject: XCI recent metrics errors on {}\r\n".format(datetime.strftime(datetime.now(CENTRAL), "%Y-%m-%d"))
-        FROM = "info-serv-admin@xsede.org"
+        FROM = "ops-support-notify@access-ci.org"
         MSG += "From: {}\r\n".format(FROM)
         MSG += "To: {}\r\n".format(','.join(self.ERROR_EMAILS))
         MSG += "\r\n"
